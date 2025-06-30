@@ -3,10 +3,9 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
-import { UserrepositoryService } from './userrepository/userrepository.service';
-import * as bcrypt from 'bcrypt';
-import { Accesslifespan } from './config/cookie.config';
 import { JwtService } from '@nestjs/jwt';
+import * as bcrypt from 'bcrypt';
+import { UserrepositoryService } from './userrepository/userrepository.service';
 
 @Injectable()
 export class AppService {
@@ -54,10 +53,7 @@ export class AppService {
       email: user.email,
     };
 
-    const access_token = await this.jwtService.signAsync(payload, {
-      secret: process.env.JWT_SECRET,
-      expiresIn: Accesslifespan,
-    });
+    const access_token = await this.jwtService.signAsync(payload);
 
     // const refresh_token = await this.jwtService.signAsync(payload, {
     //   secret: jwtConstants.secret,
