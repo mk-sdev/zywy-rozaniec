@@ -5,9 +5,12 @@ import {
   HttpCode,
   HttpStatus,
   Post,
+  Redirect,
+  Res,
 } from '@nestjs/common';
 import { AppService } from './app.service';
-
+import { accessTokenOptions } from './config/cookie.config';
+import { Response } from 'express';
 @Controller()
 export class AppController {
   constructor(private readonly appService: AppService) {}
@@ -26,5 +29,24 @@ export class AppController {
     return {
       message: 'User registered successfully',
     };
+  }
+
+  @Post('login')
+  @Redirect('profile')
+  @HttpCode(HttpStatus.OK)
+  async signIn(
+    @Body() signInDto: Record<string, any>,
+    @Res({ passthrough: true }) response: Response,
+  ) {
+    const { access_token } = await this.appService.signIn(
+      signInDto.email,
+      signInDto.password,
+    );
+
+    response.cookie('jwt', access_token, accessTokenOptions);
+
+    // response.cookie('refresh', refresh_token, refreshTokenOptions);
+
+    return { message: 'Login successful' };
   }
 }
