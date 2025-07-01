@@ -66,7 +66,7 @@ export class AppService {
     // });
 
     //* zapisz refresh token do bazy
-    await this.userRepository.updateRefreshToken(user.email, refresh_token);
+    await this.userRepository.addRefreshToken(user.email, refresh_token);
 
     return {
       access_token,
@@ -77,29 +77,28 @@ export class AppService {
   ///*
 
   async refreshTokens(
-    // access_token: string,
     refresh_token: string,
   ): Promise<{ access_token: string; refresh_token: string }> {
     try {
-      // Odszyfruj refresh token
       const refreshPayload =
         await this.refreshTokenService.verifyAsync(refresh_token);
-
       const user = await this.userRepository.findOne(refreshPayload.email);
 
-      if (!user || user.refreshtoken !== refresh_token) {
+      if (!user || !user.refreshtokens?.includes(refresh_token)) {
         throw new UnauthorizedException('Invalid refresh token');
       }
 
-      // Wygeneruj nowe tokeny
       const newPayload = { email: user.email };
-
       const newAccessToken =
         await this.accessTokenService.signAsync(newPayload);
       const newRefreshToken =
         await this.refreshTokenService.signAsync(newPayload);
 
-      await this.userRepository.updateRefreshToken(user.email, newRefreshToken);
+      await this.userRepository.replaceRefreshToken(
+        user.email,
+        refresh_token,
+        newRefreshToken,
+      );
 
       return {
         access_token: newAccessToken,
@@ -107,6 +106,19 @@ export class AppService {
       };
     } catch (err) {
       throw new UnauthorizedException('Could not refresh tokens');
+    }
+  }
+
+  async logout(refresh_token: string) {
+    try {
+      const payload = await this.refreshTokenService.verifyAsync(refresh_token);
+      await this.userRepository.removeRefreshToken(
+        payload.email,
+        refresh_token,
+      );
+    } catch (err) {
+      console.warn('Logout error:', err.message);
+      // Możesz rzucić wyjątek lub nie
     }
   }
 }

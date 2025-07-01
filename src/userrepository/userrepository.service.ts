@@ -16,18 +16,45 @@ export class UserrepositoryService {
     return this.userModel.findOne({ email });
   }
 
-  async updateRefreshToken(email: string, token: string) {
+  async addRefreshToken(email: string, token: string) {
     const user = await this.userModel.findOne({ email });
     if (!user) {
       throw new Error('User not found');
     }
 
-    // Unikalne tokeny, dodaj nowy tylko jeśli go nie ma
-    // if (!user.refreshtokens!.includes(token)) {
-    //   user.refreshtokens!.push(token);
-    // }
-    user.refreshtoken = token;
+    if (!user.refreshtokens) {
+      user.refreshtokens = [];
+    }
 
+    // Unikamy duplikatów
+    if (!user.refreshtokens.includes(token)) {
+      user.refreshtokens.push(token);
+      await user.save();
+    }
+  }
+
+  async replaceRefreshToken(email: string, oldToken: string, newToken: string) {
+    const user = await this.userModel.findOne({ email });
+    if (!user || !user.refreshtokens) return;
+
+    const index = user.refreshtokens.indexOf(oldToken);
+    if (index !== -1) {
+      user.refreshtokens[index] = newToken;
+      await user.save();
+    } else {
+      // fallback – dodaj nowy jeśli stary nie znaleziony
+      user.refreshtokens.push(newToken);
+      await user.save();
+    }
+  }
+
+  async removeRefreshToken(email: string, token: string) {
+    const user = await this.userModel.findOne({ email });
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    user.refreshtokens = (user.refreshtokens || []).filter((t) => t !== token);
     await user.save();
   }
 }

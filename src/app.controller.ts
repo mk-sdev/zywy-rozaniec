@@ -39,8 +39,6 @@ export class AppController {
   @Post('register')
   @HttpCode(HttpStatus.CREATED)
   async register(@Body() registerDto: Record<string, any>) {
-    // Here you would typically call a user service to create a new user
-    // For simplicity, we are just returning the registration data
     await this.appService.register(registerDto.email, registerDto.password);
     return {
       message: 'User registered successfully',
@@ -62,6 +60,14 @@ export class AppController {
     // response.setHeader('X-Refresh-Token', refresh_token);
 
     return { message: 'Login successful', refresh_token };
+  }
+
+  @Post('logout')
+  @HttpCode(HttpStatus.OK)
+  async logout(@Body() body: { refresh_token: string }) {
+    const { refresh_token } = body;
+    await this.appService.logout(refresh_token);
+    return { message: 'Logout successful' };
   }
 
   //* dev

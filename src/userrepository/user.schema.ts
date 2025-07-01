@@ -18,8 +18,8 @@ export class User {
   @Prop({ required: true })
   password: string;
 
-  @Prop()
-  refreshtoken?: string;
+  @Prop({ default: [] })
+  refreshtokens?: string[];
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
