@@ -73,4 +73,40 @@ export class AppService {
       refresh_token,
     };
   }
+
+  ///*
+
+  async refreshTokens(
+    // access_token: string,
+    refresh_token: string,
+  ): Promise<{ access_token: string; refresh_token: string }> {
+    try {
+      // Odszyfruj refresh token
+      const refreshPayload =
+        await this.refreshTokenService.verifyAsync(refresh_token);
+
+      const user = await this.userRepository.findOne(refreshPayload.email);
+
+      if (!user || user.refreshtoken !== refresh_token) {
+        throw new UnauthorizedException('Invalid refresh token');
+      }
+
+      // Wygeneruj nowe tokeny
+      const newPayload = { email: user.email };
+
+      const newAccessToken =
+        await this.accessTokenService.signAsync(newPayload);
+      const newRefreshToken =
+        await this.refreshTokenService.signAsync(newPayload);
+
+      await this.userRepository.updateRefreshToken(user.email, newRefreshToken);
+
+      return {
+        access_token: newAccessToken,
+        refresh_token: newRefreshToken,
+      };
+    } catch (err) {
+      throw new UnauthorizedException('Could not refresh tokens');
+    }
+  }
 }

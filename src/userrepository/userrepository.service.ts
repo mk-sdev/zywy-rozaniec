@@ -23,9 +23,10 @@ export class UserrepositoryService {
     }
 
     // Unikalne tokeny, dodaj nowy tylko jeśli go nie ma
-    if (!user.refreshtokens!.includes(token)) {
-      user.refreshtokens!.push(token);
-    }
+    // if (!user.refreshtokens!.includes(token)) {
+    //   user.refreshtokens!.push(token);
+    // }
+    user.refreshtoken = token;
 
     await user.save();
   }

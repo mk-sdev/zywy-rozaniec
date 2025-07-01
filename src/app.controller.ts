@@ -2,9 +2,9 @@ import {
   Body,
   Controller,
   Get,
+  Headers,
   HttpCode,
   HttpStatus,
-  Headers,
   Post,
   Res,
   UnauthorizedException,
@@ -18,6 +18,22 @@ export class AppController {
   @Get()
   getHello(): string {
     return this.appService.getHello();
+  }
+
+  @Post('refresh')
+  @HttpCode(HttpStatus.OK)
+  async refresh(@Body() body: { refresh_token: string }) {
+    const { refresh_token } = body;
+    const refreshed = await this.appService.refreshTokens(
+      // access_token,
+      refresh_token,
+    );
+
+    return {
+      message: 'Refresh successful',
+      access_token: refreshed.access_token,
+      refresh_token: refreshed.refresh_token,
+    };
   }
 
   @Post('register')
@@ -59,6 +75,14 @@ export class AppController {
     }
 
     const token = authHeader.split(' ')[1];
+    if (
+      !token ||
+      token === 'null' ||
+      token === 'undefined' ||
+      token.trim() === ''
+    ) {
+      throw new UnauthorizedException('Missing or invalid token');
+    }
 
     // Dla uproszczenia nie weryfikujemy tokena, tylko zwracamy dane "na sztywno"
     // W prawdziwej aplikacji byś tu zweryfikował token JWT itd.

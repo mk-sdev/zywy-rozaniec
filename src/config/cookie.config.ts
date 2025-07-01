@@ -11,8 +11,8 @@ export const refreshTokenOptions: CookieOptions = {
   httpOnly: true,
   secure: false,
   sameSite: 'lax',
-  maxAge: 1000 * 20,
+  maxAge: 1000 * 30,
 };
 
 export const Accesslifespan = '10s';
-export const RefreshLifespan = '20s';
+export const RefreshLifespan = '30s';
