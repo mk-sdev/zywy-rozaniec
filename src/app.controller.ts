@@ -5,12 +5,16 @@ import {
   Headers,
   HttpCode,
   HttpStatus,
+  Patch,
   Post,
+  Req,
   Res,
   UnauthorizedException,
+  UseGuards,
 } from '@nestjs/common';
 import { Response } from 'express';
 import { AppService } from './app.service';
+import { JwtGuard } from './jwt.guard';
 @Controller()
 export class AppController {
   constructor(private readonly appService: AppService) {}
@@ -68,6 +72,20 @@ export class AppController {
     const { refresh_token } = body;
     await this.appService.logout(refresh_token);
     return { message: 'Logout successful' };
+  }
+
+  @UseGuards(JwtGuard)
+  @Patch('change-password')
+  async changePassword(
+    @Req() req,
+    @Body() body: { currentPassword: string; newPassword: string },
+  ) {
+    const userEmail: string = req.user.email;
+    return this.appService.changePassword(
+      userEmail,
+      body.currentPassword,
+      body.newPassword,
+    );
   }
 
   //* dev

@@ -121,4 +121,31 @@ export class AppService {
       // Możesz rzucić wyjątek lub nie
     }
   }
+
+  async changePassword(
+    email: string,
+    currentPassword: string,
+    newPassword: string,
+  ) {
+
+    //todo: sprawdź, czy nowe hasło spełnia warunki haseł
+
+    const user = await this.userRepository.findOne(email);
+    if (!user) {
+      throw new ConflictException('Użytkownik o podanym mailu nie istnieje');
+    }
+
+    const isPasswordValid: string = await bcrypt.compare(
+      currentPassword,
+      user.password,
+    );
+    if (!isPasswordValid) {
+      throw new UnauthorizedException('Obecne hasło jest nieprawidłowe');
+    }
+
+    const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+    user.password = hashedNewPassword;
+
+    await user.save();
+  }
 }
