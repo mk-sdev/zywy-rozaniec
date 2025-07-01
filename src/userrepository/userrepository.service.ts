@@ -15,4 +15,18 @@ export class UserrepositoryService {
   async findOne(email: string) {
     return this.userModel.findOne({ email });
   }
+
+  async updateRefreshToken(email: string, token: string) {
+    const user = await this.userModel.findOne({ email });
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    // Unikalne tokeny, dodaj nowy tylko jeśli go nie ma
+    if (!user.refreshtokens!.includes(token)) {
+      user.refreshtokens!.push(token);
+    }
+
+    await user.save();
+  }
 }

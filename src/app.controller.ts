@@ -4,13 +4,13 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Headers,
   Post,
-  Redirect,
   Res,
+  UnauthorizedException,
 } from '@nestjs/common';
-import { AppService } from './app.service';
-import { accessTokenOptions } from './config/cookie.config';
 import { Response } from 'express';
+import { AppService } from './app.service';
 @Controller()
 export class AppController {
   constructor(private readonly appService: AppService) {}
@@ -32,21 +32,42 @@ export class AppController {
   }
 
   @Post('login')
-  @Redirect('profile')
   @HttpCode(HttpStatus.OK)
   async signIn(
     @Body() signInDto: Record<string, any>,
     @Res({ passthrough: true }) response: Response,
   ) {
-    const { access_token } = await this.appService.signIn(
+    const { access_token, refresh_token } = await this.appService.signIn(
       signInDto.email,
       signInDto.password,
     );
 
-    response.cookie('jwt', access_token, accessTokenOptions);
+    response.setHeader('Authorization', `Bearer ${access_token}`);
+    // response.setHeader('X-Refresh-Token', refresh_token);
 
-    // response.cookie('refresh', refresh_token, refreshTokenOptions);
+    return { message: 'Login successful', refresh_token };
+  }
 
-    return { message: 'Login successful' };
+  //* dev
+  @Get('userinfo')
+  getUserInfo(@Headers('authorization') authHeader: string) {
+    // Sprawdź czy jest nagłówek i czy jest w formacie "Bearer token"
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      throw new UnauthorizedException(
+        'Missing or invalid Authorization header',
+      );
+    }
+
+    const token = authHeader.split(' ')[1];
+
+    // Dla uproszczenia nie weryfikujemy tokena, tylko zwracamy dane "na sztywno"
+    // W prawdziwej aplikacji byś tu zweryfikował token JWT itd.
+
+    return {
+      id: 123,
+      name: 'Jan Kowalski',
+      email: 'jan.kowalski@example.com',
+      tokenReceived: token, // żeby widzieć jaki token przyszło
+    };
   }
 }

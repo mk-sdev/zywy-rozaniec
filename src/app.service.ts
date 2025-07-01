@@ -1,5 +1,6 @@
 import {
   ConflictException,
+  Inject,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -11,7 +12,10 @@ import { UserrepositoryService } from './userrepository/userrepository.service';
 export class AppService {
   constructor(
     private userRepository: UserrepositoryService,
-    private jwtService: JwtService,
+    @Inject('JWT_ACCESS_SERVICE')
+    private readonly accessTokenService: JwtService,
+    @Inject('JWT_REFRESH_SERVICE')
+    private readonly refreshTokenService: JwtService,
   ) {}
   getHello(): string {
     return 'Hello World!';
@@ -34,7 +38,7 @@ export class AppService {
   async signIn(
     email: string,
     password: string,
-  ): Promise<{ access_token: string }> {
+  ): Promise<{ access_token: string; refresh_token: string }> {
     const user = await this.userRepository.findOne(email); //* find a user with a provided email
     if (!user) {
       throw new UnauthorizedException();
@@ -53,7 +57,8 @@ export class AppService {
       email: user.email,
     };
 
-    const access_token = await this.jwtService.signAsync(payload);
+    const access_token = await this.accessTokenService.signAsync(payload);
+    const refresh_token = await this.refreshTokenService.signAsync(payload);
 
     // const refresh_token = await this.jwtService.signAsync(payload, {
     //   secret: jwtConstants.secret,
@@ -61,11 +66,11 @@ export class AppService {
     // });
 
     //* zapisz refresh token do bazy
-    //await this.userRepository.updateRefreshToken(user.username, refresh_token);
+    await this.userRepository.updateRefreshToken(user.email, refresh_token);
 
     return {
       access_token,
-      // refresh_token,
+      refresh_token,
     };
   }
 }
