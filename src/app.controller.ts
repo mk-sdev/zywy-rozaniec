@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Headers,
   HttpCode,
@@ -18,11 +19,6 @@ import { JwtGuard } from './jwt.guard';
 @Controller()
 export class AppController {
   constructor(private readonly appService: AppService) {}
-
-  @Get()
-  getHello(): string {
-    return this.appService.getHello();
-  }
 
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
@@ -74,8 +70,8 @@ export class AppController {
     return { message: 'Logout successful' };
   }
 
-  @UseGuards(JwtGuard)
   @Patch('change-password')
+  @UseGuards(JwtGuard)
   async changePassword(
     @Req() req,
     @Body() body: { currentPassword: string; newPassword: string },
@@ -86,6 +82,30 @@ export class AppController {
       body.currentPassword,
       body.newPassword,
     );
+  }
+
+  @Patch('change-email')
+  @UseGuards(JwtGuard)
+  async changeEmail(
+    @Req() req,
+    @Body() body: { currentEmail: string; newEmail: string; password: string },
+  ) {
+    const userEmail: string = req.user.email;
+    throw new Error('Niedokończona metoda');
+  }
+
+  @Delete('delete-account')
+  @UseGuards(JwtGuard)
+  async deleteAccount(@Req() req, @Body() body: { password: string }) {
+    const userEmail: string = req.user.email;
+    throw new Error('Niedokończona metoda');
+  }
+
+  @Post('remind-password')
+  @HttpCode(HttpStatus.OK)
+  async remindPassword(@Body() body: { email: string }) {
+    const userEmail = body.email;
+    throw new Error('Niedokończona metoda');
   }
 
   //* dev

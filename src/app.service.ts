@@ -17,9 +17,6 @@ export class AppService {
     @Inject('JWT_REFRESH_SERVICE')
     private readonly refreshTokenService: JwtService,
   ) {}
-  getHello(): string {
-    return 'Hello World!';
-  }
 
   async register(email: string, password: string): Promise<void> {
     const existingUser = await this.userRepository.findOne(email);
@@ -127,7 +124,6 @@ export class AppService {
     currentPassword: string,
     newPassword: string,
   ) {
-
     //todo: sprawdź, czy nowe hasło spełnia warunki haseł
 
     const user = await this.userRepository.findOne(email);
