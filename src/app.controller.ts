@@ -12,11 +12,16 @@ import {
   Res,
   UnauthorizedException,
   UseGuards,
+  UsePipes,
+  ValidationPipe,
 } from '@nestjs/common';
 import { Response } from 'express';
 import { AppService } from './app.service';
 import { JwtGuard } from './jwt.guard';
+import { RegisterDto } from './dtos/register.dto';
+import { LoginDto } from './dtos/login.dto';
 @Controller()
+@UsePipes(ValidationPipe)
 export class AppController {
   constructor(private readonly appService: AppService) {}
 
@@ -38,7 +43,7 @@ export class AppController {
 
   @Post('register')
   @HttpCode(HttpStatus.CREATED)
-  async register(@Body() registerDto: Record<string, any>) {
+  async register(@Body() registerDto: RegisterDto) {
     await this.appService.register(registerDto.email, registerDto.password);
     return {
       message: 'User registered successfully',
@@ -48,12 +53,12 @@ export class AppController {
   @Post('login')
   @HttpCode(HttpStatus.OK)
   async signIn(
-    @Body() signInDto: Record<string, any>,
+    @Body() loginDto: LoginDto,
     @Res({ passthrough: true }) response: Response,
   ) {
     const { access_token, refresh_token } = await this.appService.signIn(
-      signInDto.email,
-      signInDto.password,
+      loginDto.email,
+      loginDto.password,
     );
 
     response.setHeader('Authorization', `Bearer ${access_token}`);
