@@ -2,7 +2,7 @@ import { Request } from 'express';
 
 export interface JwtPayload {
   sub: string;
-  email: string;
+  // email: string;
   iat?: number;
   exp?: number;
 }

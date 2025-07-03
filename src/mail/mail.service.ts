@@ -17,8 +17,8 @@ export class MailService {
     private readonly mailerService: MailerService,
   ) {}
 
-  async changeEmail(currentEmail: string, newEmail: string, password: string) {
-    const user = await this.userRepository.findOne(currentEmail);
+  async changeEmail(id: string, newEmail: string, password: string) {
+    const user = await this.userRepository.findOne(id);
     if (!user) {
       throw new NotFoundException(
         'User with the given email address doesn`t exist',
@@ -33,7 +33,7 @@ export class MailService {
       throw new UnauthorizedException('Incorrect password');
     }
 
-    const emailExists = await this.userRepository.findOne(newEmail);
+    const emailExists = await this.userRepository.findOneByEmail(newEmail);
     if (emailExists) {
       throw new ConflictException('This email is already in use!');
     }
@@ -127,7 +127,7 @@ export class MailService {
   }
 
   async remindPassword(email: string, message: string) {
-    const user = await this.userRepository.findOne(email);
+    const user = await this.userRepository.findOneByEmail(email);
 
     if (!user) {
       // Do not do anything, in order to not to reveal the account exists in the database

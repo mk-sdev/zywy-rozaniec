@@ -12,12 +12,24 @@ export class UserrepositoryService {
     return created.save();
   }
 
-  async findOne(email: string) {
+  async findOne(id: string) {
+    return this.userModel.findOne({ _id: id });
+  }
+
+  async findOneByEmail(email: string) {
     return this.userModel.findOne({ email });
   }
 
-  async addRefreshToken(email: string, token: string) {
-    const user = await this.userModel.findOne({ email });
+  async findOneByToken(token: string): Promise<UserDocument | null> {
+    return this.userModel.findOne({ verificationToken: token });
+  }
+
+  async findOneByEmailToken(token: string): Promise<UserDocument | null> {
+    return this.userModel.findOne({ emailChangeToken: token });
+  }
+
+  async addRefreshToken(id: string, token: string) {
+    const user = await this.findOne(id);
     if (!user) {
       throw new Error('User not found');
     }
@@ -33,8 +45,8 @@ export class UserrepositoryService {
     }
   }
 
-  async replaceRefreshToken(email: string, oldToken: string, newToken: string) {
-    const user = await this.userModel.findOne({ email });
+  async replaceRefreshToken(id: string, oldToken: string, newToken: string) {
+    const user = await this.findOne(id);
     if (!user || !user.refreshtokens) return;
 
     const index = user.refreshtokens.indexOf(oldToken);
@@ -48,21 +60,13 @@ export class UserrepositoryService {
     }
   }
 
-  async removeRefreshToken(email: string, token: string) {
-    const user = await this.userModel.findOne({ email });
+  async removeRefreshToken(id: string, token: string) {
+    const user = await this.findOne(id);
     if (!user) {
       throw new Error('User not found');
     }
 
     user.refreshtokens = (user.refreshtokens || []).filter((t) => t !== token);
     await user.save();
-  }
-
-  async findOneByToken(token: string): Promise<UserDocument | null> {
-    return this.userModel.findOne({ verificationToken: token });
-  }
-
-  async findOneByEmailToken(token: string): Promise<UserDocument | null> {
-    return this.userModel.findOne({ emailChangeToken: token });
   }
 }

@@ -8,6 +8,7 @@ export class User {
   @Prop({
     required: true,
     unique: true,
+    index: true,
     validate: {
       validator: (val: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val),
       message: 'Invalid email format',

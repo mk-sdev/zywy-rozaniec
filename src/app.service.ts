@@ -24,7 +24,7 @@ export class AppService {
   ) {}
 
   async register(email: string, password: string): Promise<void> {
-    const existingUser = await this.userRepository.findOne(email);
+    const existingUser = await this.userRepository.findOneByEmail(email);
     if (existingUser) {
       // do not do anything to not to reveal the account exists in the db
       // throw new ConflictException('Email already in use');
@@ -39,7 +39,7 @@ export class AppService {
       password: hashedPassword,
     });
 
-    const newUser = await this.userRepository.findOne(email);
+    const newUser = await this.userRepository.findOneByEmail(email);
     if (!newUser) {
       throw new InternalServerErrorException('User creation failed');
     }
@@ -66,7 +66,7 @@ export class AppService {
     email: string,
     password: string,
   ): Promise<{ access_token: string; refresh_token: string }> {
-    const user = await this.userRepository.findOne(email); //* find a user with a provided email
+    const user = await this.userRepository.findOneByEmail(email); //* find a user with a provided email
     if (!user) {
       throw new UnauthorizedException();
     }
@@ -85,7 +85,8 @@ export class AppService {
     }
     //* if the user is found and the password matches, generate a JWT token and send it back
     const payload = {
-      email: user.email,
+      sub: user._id,
+      // email: user.email,
     };
 
     const access_token = await this.accessTokenService.signAsync(payload);
@@ -97,7 +98,10 @@ export class AppService {
     // });
 
     //* zapisz refresh token do bazy
-    await this.userRepository.addRefreshToken(user.email, refresh_token);
+    await this.userRepository.addRefreshToken(
+      user._id as string,
+      refresh_token,
+    );
 
     if (user.isDeletionPending) {
       user.isDeletionPending = false;
@@ -119,20 +123,20 @@ export class AppService {
     try {
       const refreshPayload: JwtPayload =
         await this.refreshTokenService.verifyAsync(refresh_token);
-      const user = await this.userRepository.findOne(refreshPayload.email);
+      const user = await this.userRepository.findOne(refreshPayload.sub);
 
       if (!user || !user.refreshtokens?.includes(refresh_token)) {
         throw new UnauthorizedException('Invalid refresh token');
       }
 
-      const newPayload = { email: user.email };
+      const newPayload = { sub: user._id, email: user.email };
       const newAccessToken =
         await this.accessTokenService.signAsync(newPayload);
       const newRefreshToken =
         await this.refreshTokenService.signAsync(newPayload);
 
       await this.userRepository.replaceRefreshToken(
-        user.email,
+        user._id as string,
         refresh_token,
         newRefreshToken,
       );
@@ -151,10 +155,7 @@ export class AppService {
     try {
       const payload: JwtPayload =
         await this.refreshTokenService.verifyAsync(refresh_token);
-      await this.userRepository.removeRefreshToken(
-        payload.email,
-        refresh_token,
-      );
+      await this.userRepository.removeRefreshToken(payload.sub, refresh_token);
     } catch (err) {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       console.warn('Logout error:', err.message);
@@ -163,14 +164,14 @@ export class AppService {
   }
 
   async changePassword(
-    email: string,
+    id: string,
     currentPassword: string,
     newPassword: string,
   ) {
     //todo: check if the new password meets the conditions
     //todo: delete all the refresh tokens
 
-    const user = await this.userRepository.findOne(email);
+    const user = await this.userRepository.findOne(id);
     if (!user) {
       throw new ConflictException('The user of the given email doesn`t exist');
     }
@@ -189,8 +190,8 @@ export class AppService {
     await user.save();
   }
 
-  async markForDeletion(email: string, password: string) {
-    const user = await this.userRepository.findOne(email);
+  async markForDeletion(id: string, password: string) {
+    const user = await this.userRepository.findOne(id);
     if (!user)
       throw new ConflictException('The user of the given email doesn`t exist');
 

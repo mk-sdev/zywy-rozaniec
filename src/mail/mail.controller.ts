@@ -34,10 +34,10 @@ export class MailController {
     @Req() req: UserRequest,
     @Body() body: { newEmail: string; password: string },
   ) {
-    const currentEmail: string = req.user!.email;
+    const id = req.user!.sub;
     const { newEmail, password } = body;
 
-    await this.mailService.changeEmail(currentEmail, newEmail, password);
+    await this.mailService.changeEmail(id, newEmail, password);
 
     return { message: 'Email address has been changed successfully' };
   }

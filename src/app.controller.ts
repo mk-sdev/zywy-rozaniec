@@ -86,9 +86,9 @@ export class AppController {
     @Req() req: UserRequest,
     @Body() body: { currentPassword: string; newPassword: string },
   ) {
-    const userEmail: string = req.user!.email;
+    const id: string = req.user!.sub;
     return this.appService.changePassword(
-      userEmail,
+      id,
       body.currentPassword,
       body.newPassword,
     );
@@ -100,8 +100,8 @@ export class AppController {
     @Req() req: UserRequest,
     @Body() body: { password: string },
   ) {
-    const userEmail: string = req.user!.email;
-    this.appService.markForDeletion(email, password);
+    const id: string = req.user!.sub;
+    await this.appService.markForDeletion(id, body.password);
   }
 
   //* dev
