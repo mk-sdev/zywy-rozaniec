@@ -3,6 +3,7 @@ import {
   ConflictException,
   Inject,
   Injectable,
+  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
@@ -63,6 +64,72 @@ export class AppService {
         <p>Jeśli to nie Ty tworzyłeś konto, zignoruj tę wiadomość.</p>
       `,
     });
+  }
+
+  async sendEmailToken(toEmail: string, token: string) {
+    const frontendUrl = 'http://localhost:3000'; // adres frontend do potwierdzania maila
+    const confirmationLink = `${frontendUrl}/confirm-email-change?token=${token}`;
+
+    await this.mailerService.sendMail({
+      to: toEmail,
+      subject: 'Potwierdź zmianę adresu email',
+      template: 'email-change-confirmation', // np. szablon e-mail (w folderze mail templates)
+      context: {
+        confirmationLink,
+      },
+    });
+  }
+
+  async changeEmail(currentEmail: string, newEmail: string, password: string) {
+    const user = await this.userRepository.findOne(currentEmail);
+    if (!user) {
+      throw new NotFoundException('Użytkownik nie istnieje');
+    }
+
+    // Sprawdzenie hasła
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      throw new UnauthorizedException('Nieprawidłowe hasło');
+    }
+
+    // Sprawdzenie czy nowy email już istnieje
+    const emailExists = await this.userRepository.findOne(newEmail);
+    if (emailExists) {
+      throw new ConflictException('Nowy email jest już używany');
+    }
+
+    const verificationToken = randomUUID();
+    user.pendingEmail = newEmail;
+    user.emailChangeToken = verificationToken;
+    user.emailChangeTokenExpires = Date.now() + 1000 * 60 * 60; // 1h ważności
+    await user.save();
+
+    await this.sendEmailToken(newEmail, verificationToken);
+  }
+
+  async confirmEmailChange(token: string): Promise<void> {
+    const user = await this.userRepository.findOneByEmailToken(token);
+
+    if (!user) {
+      throw new BadRequestException('Nieprawidłowy token');
+    }
+
+    if (user.emailChangeTokenExpires! < Date.now()) {
+      throw new BadRequestException('Token wygasł');
+    }
+    if (!user.pendingEmail) {
+      throw new BadRequestException(
+        'Brak nowego adresu email do potwierdzenia',
+      );
+    }
+
+    // Potwierdzamy nowy email
+    user.email = user.pendingEmail;
+    user.pendingEmail = undefined;
+    user.emailChangeToken = undefined;
+    user.emailChangeTokenExpires = undefined;
+
+    await user.save();
   }
 
   async verifyToken(token: string): Promise<User> {

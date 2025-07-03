@@ -61,4 +61,8 @@ export class UserrepositoryService {
   async findOneByToken(token: string): Promise<UserDocument | null> {
     return this.userModel.findOne({ verificationToken: token });
   }
+
+  async findOneByEmailToken(token: string): Promise<UserDocument | null> {
+    return this.userModel.findOne({ emailChangeToken: token });
+  }
 }

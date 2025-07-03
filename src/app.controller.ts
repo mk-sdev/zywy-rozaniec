@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -9,6 +10,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   Req,
   Res,
   UnauthorizedException,
@@ -107,10 +109,26 @@ export class AppController {
   @UseGuards(JwtGuard)
   async changeEmail(
     @Req() req,
-    @Body() body: { currentEmail: string; newEmail: string; password: string },
+    @Body() body: { newEmail: string; password: string },
   ) {
-    const userEmail: string = req.user.email;
-    throw new Error('Niedokończona metoda');
+    const currentEmail: string = req.user.email;
+    const { newEmail, password } = body;
+
+    this.appService.changeEmail(currentEmail, newEmail, password);
+
+    return { message: 'Email został zmieniony pomyślnie' };
+  }
+
+  @Patch('confirm-email-change')
+  async confirmEmailChange(@Query('token') token: string) {
+    if (!token) {
+      throw new BadRequestException('Token jest wymagany');
+    }
+
+    // Wywołaj logikę serwisową potwierdzającą token
+    await this.appService.confirmEmailChange(token);
+
+    return { message: 'Email został pomyślnie zweryfikowany i zmieniony' };
   }
 
   @Delete('delete-account')
