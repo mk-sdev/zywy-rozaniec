@@ -56,7 +56,12 @@ export class MailController {
   @Post('remind-password')
   @HttpCode(HttpStatus.OK)
   async remindPassword(@Body() body: { email: string }) {
-    const userEmail = body.email;
-    throw new Error('Niedokończona metoda');
+    const { email } = body;
+
+    await this.mailService.remindPassword(email);
+    return {
+      message:
+        'Jeśli użytkownik o takim emailu istnieje, wysłaliśmy instrukcje resetu hasła',
+    };
   }
 }

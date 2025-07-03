@@ -126,4 +126,37 @@ export class MailService {
         : undefined,
     });
   }
+
+  async remindPassword(email: string) {
+    const user = await this.userRepository.findOne(email);
+
+    if (!user) {
+      // Dla bezpieczeństwa możemy nic nie robić, żeby nie ujawniać istnienia konta
+      return {
+        message:
+          'Jeśli użytkownik o takim emailu istnieje, wysłaliśmy instrukcje resetu hasła',
+      };
+    }
+
+    // Wygeneruj token resetujący
+    const resetToken = randomUUID();
+
+    // Ustaw token i datę wygaśnięcia (np. 1 godzina)
+    user.passwordResetToken = resetToken;
+    user.passwordResetTokenExpires = Date.now() + 1000 * 60 * 60; // 1h
+
+    await user.save();
+
+    // Wyślij maila z linkiem resetującym
+    await this.sendMailWithToken(
+      email,
+      resetToken,
+      'Reset hasła',
+      'password-reset', // jeśli masz template, jeśli nie to undefined
+      {}, // dodatkowe dane do templatu, jeśli trzeba
+      'http://localhost:3000', // adres frontend do resetu
+      'token',
+      '/reset-password', // endpoint frontend do resetu hasła
+    );
+  }
 }

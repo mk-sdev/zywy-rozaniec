@@ -35,6 +35,12 @@ export class User {
 
   @Prop()
   emailChangeTokenExpires?: number; // timestamp ważności tokena
+
+  @Prop({ index: true, sparse: true })
+  passwordResetToken?: string;
+
+  @Prop()
+  passwordResetTokenExpires?: number; // timestamp (np. ms od epoch)
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
