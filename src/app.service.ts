@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   Inject,
   Injectable,
@@ -7,6 +8,9 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { UserrepositoryService } from './userrepository/userrepository.service';
+import { randomUUID } from 'crypto';
+import { MailerService } from '@nestjs-modules/mailer';
+import { User } from './userrepository/user.schema';
 
 @Injectable()
 export class AppService {
@@ -16,6 +20,7 @@ export class AppService {
     private readonly accessTokenService: JwtService,
     @Inject('JWT_REFRESH_SERVICE')
     private readonly refreshTokenService: JwtService,
+    private readonly mailerService: MailerService,
   ) {}
 
   async register(email: string, password: string): Promise<void> {
@@ -26,10 +31,50 @@ export class AppService {
 
     const hashedPassword: string = await bcrypt.hash(password, 10); // 10 salt rounds
 
+    this.sendToken(email);
+
     await this.userRepository.insertOne({
       email,
       password: hashedPassword,
     });
+  }
+
+  async sendToken(email: string) {
+    const existingUser = await this.userRepository.findOne(email);
+    if (!existingUser) {
+      throw new ConflictException('User not found');
+    }
+
+    const verificationToken = randomUUID();
+    existingUser.verificationToken = verificationToken;
+    await existingUser.save();
+
+    //! nie wiem czy jak wysłane z telefonu to przyjdzie na ten adres
+    const verificationUrl = `http://localhost:3000/verify/${verificationToken}`;
+
+    await this.mailerService.sendMail({
+      to: email,
+      subject: 'Aktywuj swoje konto',
+      template: './verification', // tylko jeśli korzystasz z template engine (np. Handlebars)
+      html: `
+        <h3>Witaj!</h3>
+        <p>Kliknij poniższy link, aby aktywować swoje konto:</p>
+        <a href="${verificationUrl}">${verificationUrl}</a>
+        <p>Jeśli to nie Ty tworzyłeś konto, zignoruj tę wiadomość.</p>
+      `,
+    });
+  }
+
+  async verifyToken(token: string): Promise<User> {
+    const user = await this.userRepository.findOneByToken(token);
+    if (!user) {
+      throw new BadRequestException('Nieprawidłowy token');
+    }
+
+    user.isVerified = true;
+    user.verificationToken = undefined;
+    await user.save();
+    return user;
   }
 
   async signIn(
@@ -39,6 +84,10 @@ export class AppService {
     const user = await this.userRepository.findOne(email); //* find a user with a provided email
     if (!user) {
       throw new UnauthorizedException();
+    }
+
+    if (!user.isVerified) {
+      throw new UnauthorizedException('Nie zweryfikowano konta');
     }
     //* check if the password matches
     const isPasswordValid: boolean = await bcrypt.compare(

@@ -6,7 +6,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { jwtConstants } from './config/jwt.constants';
 import { UserrepositoryModule } from './userrepository/userrepository.module';
-
+import { MailerModule } from '@nestjs-modules/mailer';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -18,6 +18,20 @@ import { UserrepositoryModule } from './userrepository/userrepository.module';
       global: true,
       secret: jwtConstants.accessSecret,
       signOptions: { expiresIn: jwtConstants.accessExpiresIn },
+    }),
+    MailerModule.forRoot({
+      transport: {
+        host: 'sandbox.smtp.mailtrap.io',
+        port: 587,
+        secure: false,
+        auth: {
+          user: process.env.MAIL_USER,
+          pass: process.env.MAIL_PASS,
+        },
+      },
+      defaults: {
+        from: '"Twoja Apka" <no-reply@twoja-apka.pl>',
+      },
     }),
   ],
   controllers: [AppController],

@@ -23,7 +23,8 @@ export class JwtGuard implements CanActivate {
 
     try {
       const payload = await this.jwtService.verifyAsync(token);
-      request.user = payload; // <- przekazujesz payload dalej
+      //todo poprawić
+      // request.user = payload; // <- przekazujesz payload dalej
       return true;
     } catch (err) {
       throw new UnauthorizedException('Nieprawidłowy token');

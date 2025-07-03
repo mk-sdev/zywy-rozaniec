@@ -6,6 +6,7 @@ import {
   Headers,
   HttpCode,
   HttpStatus,
+  Param,
   Patch,
   Post,
   Req,
@@ -24,6 +25,11 @@ import { LoginDto } from './dtos/login.dto';
 @UsePipes(ValidationPipe)
 export class AppController {
   constructor(private readonly appService: AppService) {}
+
+  @Get('hello')
+  getHello(): string {
+    return 'Hello World!';
+  }
 
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
@@ -47,6 +53,14 @@ export class AppController {
     await this.appService.register(registerDto.email, registerDto.password);
     return {
       message: 'User registered successfully',
+    };
+  }
+
+  @Get('verify/:token')
+  async verify(@Param('token') token: string) {
+    const user = await this.appService.verifyToken(token);
+    return {
+      message: 'Konto zostało pomyślnie aktywowane',
     };
   }
 

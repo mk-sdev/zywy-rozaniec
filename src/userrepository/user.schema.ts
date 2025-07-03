@@ -20,6 +20,12 @@ export class User {
 
   @Prop({ default: [] })
   refreshtokens?: string[];
+
+  @Prop({ default: false })
+  isVerified: boolean;
+
+  @Prop({ index: true, sparse: true })
+  verificationToken?: string;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

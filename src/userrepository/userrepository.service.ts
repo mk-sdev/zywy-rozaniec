@@ -57,4 +57,8 @@ export class UserrepositoryService {
     user.refreshtokens = (user.refreshtokens || []).filter((t) => t !== token);
     await user.save();
   }
+
+  async findOneByToken(token: string): Promise<UserDocument | null> {
+    return this.userModel.findOne({ verificationToken: token });
+  }
 }
