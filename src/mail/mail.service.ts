@@ -62,6 +62,10 @@ export class MailService {
       throw new BadRequestException('Invalid token');
     }
 
+    if (user.verificationTokenExpires! < Date.now()) {
+      throw new BadRequestException('The token has expired');
+    }
+
     user.isVerified = true;
     user.verificationToken = undefined;
     await user.save();

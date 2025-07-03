@@ -29,6 +29,9 @@ export class User {
   @Prop({ index: true, sparse: true })
   verificationToken?: string;
 
+  @Prop()
+  verificationTokenExpires?: number;
+
   // * for email change
 
   @Prop()

@@ -47,6 +47,7 @@ export class AppService {
     const verificationToken = randomUUID();
 
     newUser.verificationToken = verificationToken;
+    newUser.emailChangeTokenExpires = Date.now() + 1000 * 60 * 60;
     await newUser.save();
 
     await this.mailService.sendMailWithToken(
