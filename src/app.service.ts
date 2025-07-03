@@ -99,6 +99,12 @@ export class AppService {
     //* zapisz refresh token do bazy
     await this.userRepository.addRefreshToken(user.email, refresh_token);
 
+    if (user.isDeletionPending) {
+      user.isDeletionPending = false;
+      user.deletionScheduledAt = undefined;
+      await user.save();
+    }
+
     return {
       access_token,
       refresh_token,
@@ -180,6 +186,24 @@ export class AppService {
     const hashedNewPassword = await bcrypt.hash(newPassword, 10);
     user.password = hashedNewPassword;
 
+    await user.save();
+  }
+
+  async markForDeletion(email: string, password: string) {
+    const user = await this.userRepository.findOne(email);
+    if (!user)
+      throw new ConflictException('The user of the given email doesn`t exist');
+
+    const isPasswordValid: string = await bcrypt.compare(
+      password,
+      user.password,
+    );
+    if (!isPasswordValid) {
+      throw new UnauthorizedException('Current password is incorrect');
+    }
+
+    user.isDeletionPending = true;
+    user.deletionScheduledAt = Date.now() + 1000 * 60 * 60 * 24 * 14; // two weeks
     await user.save();
   }
 }

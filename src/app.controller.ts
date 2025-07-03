@@ -101,7 +101,7 @@ export class AppController {
     @Body() body: { password: string },
   ) {
     const userEmail: string = req.user!.email;
-    throw new Error('// TODO: finish this method');
+    this.appService.markForDeletion(email, password);
   }
 
   //* dev

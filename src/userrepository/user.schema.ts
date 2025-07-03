@@ -50,6 +50,14 @@ export class User {
 
   @Prop()
   passwordResetTokenExpires?: number;
+
+  // * for account deletion
+
+  @Prop({ type: Boolean })
+  isDeletionPending?: boolean;
+
+  @Prop()
+  deletionScheduledAt?: number;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
