@@ -4,14 +4,14 @@ import { JwtModule, JwtService } from '@nestjs/jwt';
 import { MongooseModule } from '@nestjs/mongoose';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { jwtConstants } from './config/jwt.constants';
+import { jwtConstants } from './utils/jwt.constants';
 import { UserrepositoryModule } from './userrepository/userrepository.module';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { MailModule } from './mail/mail.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
-      isGlobal: true, // pozwala korzystać z process.env w całej aplikacji
+      isGlobal: true, // lets use process.env in the whole app
     }),
     UserrepositoryModule,
     MongooseModule.forRoot('mongodb://localhost:27017/imagehub'),

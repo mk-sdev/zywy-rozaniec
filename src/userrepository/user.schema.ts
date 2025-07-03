@@ -21,26 +21,32 @@ export class User {
   @Prop({ default: [] })
   refreshtokens?: string[];
 
+  // * for the registration
+
   @Prop({ default: false })
   isVerified: boolean;
 
   @Prop({ index: true, sparse: true })
   verificationToken?: string;
 
+  // * for email change
+
   @Prop()
-  pendingEmail?: string; // tymczasowy adres e-mail do potwierdzenia
+  pendingEmail?: string; // temporary email address to confirm
 
   @Prop({ index: true, sparse: true })
-  emailChangeToken?: string; // token do weryfikacji
+  emailChangeToken?: string;
 
   @Prop()
-  emailChangeTokenExpires?: number; // timestamp ważności tokena
+  emailChangeTokenExpires?: number;
+
+  // * for password change
 
   @Prop({ index: true, sparse: true })
   passwordResetToken?: string;
 
   @Prop()
-  passwordResetTokenExpires?: number; // timestamp (np. ms od epoch)
+  passwordResetTokenExpires?: number;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

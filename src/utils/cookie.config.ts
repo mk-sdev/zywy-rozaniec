@@ -3,7 +3,7 @@ import { CookieOptions } from 'express';
 export const accessTokenOptions: CookieOptions = {
   httpOnly: true,
   secure: false,
-  sameSite: 'lax', // teraz wie, że to nie zwykły string, tylko literal 'lax'
+  sameSite: 'lax',
   maxAge: 1000 * 10,
 };
 

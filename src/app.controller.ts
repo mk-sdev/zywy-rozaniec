@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -7,10 +6,8 @@ import {
   Headers,
   HttpCode,
   HttpStatus,
-  Param,
   Patch,
   Post,
-  Query,
   Req,
   Res,
   UnauthorizedException,
@@ -20,9 +17,10 @@ import {
 } from '@nestjs/common';
 import { Response } from 'express';
 import { AppService } from './app.service';
-import { JwtGuard } from './jwt.guard';
-import { RegisterDto } from './dtos/register.dto';
+import { UserRequest } from './utils/interfaces';
 import { LoginDto } from './dtos/login.dto';
+import { RegisterDto } from './dtos/register.dto';
+import { JwtGuard } from './jwt.guard';
 @Controller()
 @UsePipes(ValidationPipe)
 export class AppController {
@@ -52,10 +50,9 @@ export class AppController {
   @Post('register')
   @HttpCode(HttpStatus.CREATED)
   async register(@Body() registerDto: RegisterDto) {
+    const message = 'Verification link has been sent to your email address';
     await this.appService.register(registerDto.email, registerDto.password);
-    return {
-      message: 'User registered successfully',
-    };
+    return { message };
   }
 
   @Post('login')
@@ -86,10 +83,10 @@ export class AppController {
   @Patch('change-password')
   @UseGuards(JwtGuard)
   async changePassword(
-    @Req() req,
+    @Req() req: UserRequest,
     @Body() body: { currentPassword: string; newPassword: string },
   ) {
-    const userEmail: string = req.user.email;
+    const userEmail: string = req.user!.email;
     return this.appService.changePassword(
       userEmail,
       body.currentPassword,
@@ -97,21 +94,20 @@ export class AppController {
     );
   }
 
-
-
   @Delete('delete-account')
   @UseGuards(JwtGuard)
-  async deleteAccount(@Req() req, @Body() body: { password: string }) {
-    const userEmail: string = req.user.email;
-    throw new Error('Niedokończona metoda');
+  async deleteAccount(
+    @Req() req: UserRequest,
+    @Body() body: { password: string },
+  ) {
+    const userEmail: string = req.user!.email;
+    throw new Error('// TODO: finish this method');
   }
-
-
 
   //* dev
   @Get('userinfo')
   getUserInfo(@Headers('authorization') authHeader: string) {
-    // Sprawdź czy jest nagłówek i czy jest w formacie "Bearer token"
+    // Check if there is a header and whether it is in the "bearer token" format
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       throw new UnauthorizedException(
         'Missing or invalid Authorization header',
@@ -128,14 +124,11 @@ export class AppController {
       throw new UnauthorizedException('Missing or invalid token');
     }
 
-    // Dla uproszczenia nie weryfikujemy tokena, tylko zwracamy dane "na sztywno"
-    // W prawdziwej aplikacji byś tu zweryfikował token JWT itd.
-
     return {
       id: 123,
       name: 'Jan Kowalski',
       email: 'jan.kowalski@example.com',
-      tokenReceived: token, // żeby widzieć jaki token przyszło
+      tokenReceived: token,
     };
   }
 }

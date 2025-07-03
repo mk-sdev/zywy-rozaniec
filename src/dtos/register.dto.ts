@@ -7,23 +7,23 @@ import {
 } from 'class-validator';
 
 export class RegisterDto {
-  @IsEmail({}, { message: 'Nieprawidłowy adres email' })
+  @IsEmail({}, { message: 'Invalid email format' })
   email: string;
 
-  @IsNotEmpty({ message: 'Hasło jest wymagane' })
-  @MinLength(8, { message: 'Hasło musi mieć co najmniej 8 znaków' })
-  @MaxLength(30, { message: 'Hasło musi mieć co najwyżej 30 znaków' })
+  @IsNotEmpty({ message: 'Password cannot be empty' })
+  @MinLength(8, { message: 'Password must contain at least 6 characters' })
+  @MaxLength(30, { message: 'Password must contain at most 30 characters' })
   @Matches(/(?=.*[a-z])/, {
-    message: 'Hasło musi zawierać co najmniej jedną małą literę',
+    message: 'Password must contain at least 1 lower case letter',
   })
   @Matches(/(?=.*[A-Z])/, {
-    message: 'Hasło musi zawierać co najmniej jedną wielką literę',
+    message: 'Password must contain at least 1 capital letter',
   })
   @Matches(/(?=.*\d)/, {
-    message: 'Hasło musi zawierać co najmniej jedną cyfrę',
+    message: 'Password must contain at least 1 digit',
   })
   @Matches(/(?=.*[!@#$%^&*()\-_=+{};:,<.>])/, {
-    message: 'Hasło musi zawierać co najmniej jeden znak specjalny',
+    message: 'Password must contain at least 1 special character',
   })
   password: string;
 }

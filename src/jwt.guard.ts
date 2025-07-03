@@ -5,29 +5,29 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { Request } from 'express';
+import { JwtPayload, UserRequest } from './utils/interfaces';
 
 @Injectable()
 export class JwtGuard implements CanActivate {
   constructor(private readonly jwtService: JwtService) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const request = context.switchToHttp().getRequest<Request>();
+    const request = context.switchToHttp().getRequest<UserRequest>();
 
     const authHeader = request.headers['authorization'];
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      throw new UnauthorizedException('Brak tokenu');
+      throw new UnauthorizedException('No token provided');
     }
 
-    const token = authHeader.replace('Bearer ', '');
+    const token = authHeader.split(' ')[1];
 
     try {
-      const payload = await this.jwtService.verifyAsync(token);
-      //todo poprawić
-      // request.user = payload; // <- przekazujesz payload dalej
+      const payload: JwtPayload = await this.jwtService.verifyAsync(token);
+      request.user = payload;
       return true;
     } catch (err) {
-      throw new UnauthorizedException('Nieprawidłowy token');
+      console.error(err);
+      throw new UnauthorizedException('Invalid token');
     }
   }
 }

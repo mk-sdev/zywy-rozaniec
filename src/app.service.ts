@@ -10,6 +10,7 @@ import * as bcrypt from 'bcrypt';
 import { randomUUID } from 'crypto';
 import { MailService } from './mail/mail.service';
 import { UserrepositoryService } from './userrepository/userrepository.service';
+import { JwtPayload } from './utils/interfaces';
 
 @Injectable()
 export class AppService {
@@ -23,14 +24,14 @@ export class AppService {
   ) {}
 
   async register(email: string, password: string): Promise<void> {
-    // Sprawdź, czy użytkownik już istnieje
     const existingUser = await this.userRepository.findOne(email);
     if (existingUser) {
-      throw new ConflictException('Email already in use');
+      // do not do anything to not to reveal the account exists in the db
+      // throw new ConflictException('Email already in use');
     }
 
-    // Zaszyfruj hasło
-    const hashedPassword: string = await bcrypt.hash(password, 10); // 10 salt rounds
+    // @ts-ignore
+    const hashedPassword = await bcrypt.hash(password, 10); // 10 salt rounds
 
     // Dodaj użytkownika do bazy
     await this.userRepository.insertOne({
@@ -38,25 +39,21 @@ export class AppService {
       password: hashedPassword,
     });
 
-    // Pobierz nowo dodanego użytkownika (możesz to zrobić np. przez findOne)
     const newUser = await this.userRepository.findOne(email);
     if (!newUser) {
       throw new InternalServerErrorException('User creation failed');
     }
 
-    // Wygeneruj token weryfikacyjny
     const verificationToken = randomUUID();
 
-    // Dodaj token do użytkownika
     newUser.verificationToken = verificationToken;
     await newUser.save();
 
-    // Wyślij maila z tokenem
     await this.mailService.sendMailWithToken(
       email,
       verificationToken,
       'Aktywuj swoje konto',
-      undefined, // bez template
+      undefined, // no template
       undefined,
       'http://localhost:3000',
       'token',
@@ -113,7 +110,7 @@ export class AppService {
     refresh_token: string,
   ): Promise<{ access_token: string; refresh_token: string }> {
     try {
-      const refreshPayload =
+      const refreshPayload: JwtPayload =
         await this.refreshTokenService.verifyAsync(refresh_token);
       const user = await this.userRepository.findOne(refreshPayload.email);
 
@@ -138,20 +135,23 @@ export class AppService {
         refresh_token: newRefreshToken,
       };
     } catch (err) {
-      throw new UnauthorizedException('Could not refresh tokens');
+      console.error(err);
+      throw new UnauthorizedException('Could not refresh tokens: ' + err);
     }
   }
 
   async logout(refresh_token: string) {
     try {
-      const payload = await this.refreshTokenService.verifyAsync(refresh_token);
+      const payload: JwtPayload =
+        await this.refreshTokenService.verifyAsync(refresh_token);
       await this.userRepository.removeRefreshToken(
         payload.email,
         refresh_token,
       );
     } catch (err) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       console.warn('Logout error:', err.message);
-      // Możesz rzucić wyjątek lub nie
+      // You can throw an error or not
     }
   }
 
@@ -160,11 +160,12 @@ export class AppService {
     currentPassword: string,
     newPassword: string,
   ) {
-    //todo: sprawdź, czy nowe hasło spełnia warunki haseł
+    //todo: check if the new password meets the conditions
+    //todo: delete all the refresh tokens
 
     const user = await this.userRepository.findOne(email);
     if (!user) {
-      throw new ConflictException('Użytkownik o podanym mailu nie istnieje');
+      throw new ConflictException('The user of the given email doesn`t exist');
     }
 
     const isPasswordValid: string = await bcrypt.compare(
@@ -172,7 +173,7 @@ export class AppService {
       user.password,
     );
     if (!isPasswordValid) {
-      throw new UnauthorizedException('Obecne hasło jest nieprawidłowe');
+      throw new UnauthorizedException('Current password is incorrect');
     }
 
     const hashedNewPassword = await bcrypt.hash(newPassword, 10);

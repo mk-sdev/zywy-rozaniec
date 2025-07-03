@@ -8,9 +8,12 @@ async function bootstrap() {
   app.enableCors({
     origin: ['http://localhost:8081', 'http://192.168.1.30:8081'],
     credentials: true,
-    exposedHeaders: ['Authorization'], // żeby dało się przesyłać jwt w headerze na przeglądarkę
+    exposedHeaders: ['Authorization'], // so that I could send headers to a browser
   });
   app.use(cookieParser());
   await app.listen(process.env.PORT ?? 3000);
 }
-bootstrap();
+bootstrap().catch((err) => {
+  console.error('Application failed to start', err);
+  process.exit(1);
+});

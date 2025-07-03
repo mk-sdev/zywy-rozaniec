@@ -26,7 +26,7 @@ export class UserrepositoryService {
       user.refreshtokens = [];
     }
 
-    // Unikamy duplikatów
+    // Avoid duplicates
     if (!user.refreshtokens.includes(token)) {
       user.refreshtokens.push(token);
       await user.save();
@@ -42,7 +42,7 @@ export class UserrepositoryService {
       user.refreshtokens[index] = newToken;
       await user.save();
     } else {
-      // fallback – dodaj nowy jeśli stary nie znaleziony
+      // fallback - add new if the old one wasn't found
       user.refreshtokens.push(newToken);
       await user.save();
     }

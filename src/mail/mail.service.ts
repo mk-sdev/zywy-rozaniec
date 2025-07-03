@@ -6,9 +6,8 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { randomUUID } from 'crypto';
-import { User } from 'src/userrepository/user.schema';
 import * as bcrypt from 'bcrypt';
+import { randomUUID } from 'crypto';
 import { UserrepositoryService } from '../userrepository/userrepository.service';
 
 @Injectable()
@@ -21,68 +20,67 @@ export class MailService {
   async changeEmail(currentEmail: string, newEmail: string, password: string) {
     const user = await this.userRepository.findOne(currentEmail);
     if (!user) {
-      throw new NotFoundException('Użytkownik nie istnieje');
+      throw new NotFoundException(
+        'User with the given email address doesn`t exist',
+      );
     }
 
-    // Sprawdzenie hasła
-    const isPasswordValid = await bcrypt.compare(password, user.password);
+    const isPasswordValid: boolean = await bcrypt.compare(
+      password,
+      user.password,
+    );
     if (!isPasswordValid) {
-      throw new UnauthorizedException('Nieprawidłowe hasło');
+      throw new UnauthorizedException('Incorrect password');
     }
 
-    // Sprawdzenie czy nowy email już istnieje
     const emailExists = await this.userRepository.findOne(newEmail);
     if (emailExists) {
-      throw new ConflictException('Nowy email jest już używany');
+      throw new ConflictException('This email is already in use!');
     }
 
     const verificationToken = randomUUID();
     user.pendingEmail = newEmail;
     user.emailChangeToken = verificationToken;
-    user.emailChangeTokenExpires = Date.now() + 1000 * 60 * 60; // 1h ważności
+    user.emailChangeTokenExpires = Date.now() + 1000 * 60 * 60; // 1h
     await user.save();
 
     await this.sendMailWithToken(
       newEmail,
       verificationToken,
-      'Potwierdź zmianę adresu email',
+      'Confirm email address change',
       'email-change-confirmation',
-      {}, // lub inne dane do templatu
+      {},
       'http://localhost:3000',
       'token',
-      '/confirm-email-change',
+      '/verify-email',
     );
   }
 
-  async verifyToken(token: string): Promise<User> {
+  async verifyToken(token: string): Promise<void> {
     const user = await this.userRepository.findOneByToken(token);
     if (!user) {
-      throw new BadRequestException('Nieprawidłowy token');
+      throw new BadRequestException('Invalid token');
     }
 
     user.isVerified = true;
     user.verificationToken = undefined;
     await user.save();
-    return user;
   }
 
   async confirmEmailChange(token: string): Promise<void> {
     const user = await this.userRepository.findOneByEmailToken(token);
 
     if (!user) {
-      throw new BadRequestException('Nieprawidłowy token');
+      throw new BadRequestException('Invalid token');
     }
 
     if (user.emailChangeTokenExpires! < Date.now()) {
-      throw new BadRequestException('Token wygasł');
+      throw new BadRequestException('The token has expired');
     }
     if (!user.pendingEmail) {
-      throw new BadRequestException(
-        'Brak nowego adresu email do potwierdzenia',
-      );
+      throw new BadRequestException('No new email address to verify');
     }
 
-    // Potwierdzamy nowy email
     user.email = user.pendingEmail;
     user.pendingEmail = undefined;
     user.emailChangeToken = undefined;
@@ -97,15 +95,13 @@ export class MailService {
     subject: string,
     template?: string,
     contextData?: Record<string, any>,
-    baseUrl: string = 'http://localhost:3000', // domyślny adres frontend/backend
-    tokenQueryParamName: string = 'token', // domyślna nazwa parametru z tokenem w linku
-    path?: string, // ścieżka w linku, np. '/verify-account' lub '/confirm-email-change'
+    baseUrl: string = 'http://localhost:3000',
+    tokenQueryParamName: string = 'token',
+    path?: string,
   ) {
-    // Skonstruuj URL do kliknięcia
     const tokenPath = path ? `${path}` : '';
     const confirmationLink = `${baseUrl}${tokenPath}?${tokenQueryParamName}=${token}`;
 
-    // Przygotuj kontekst dla templatu (jeśli jest)
     const context = contextData
       ? { ...contextData, confirmationLink }
       : { confirmationLink };
@@ -115,48 +111,43 @@ export class MailService {
       subject,
       template,
       context,
-      // Jeśli nie masz template engine, możesz też wysłać zwykły html:
       html: !template
         ? `
-          <h3>Witaj!</h3>
-          <p>Kliknij poniższy link:</p>
+          <h3>Welcome!</h3>
+          <p>Click the link below:</p>
           <a href="${confirmationLink}">${confirmationLink}</a>
-          <p>Jeśli to nie Ty, zignoruj tę wiadomość.</p>
+          <p>If that's not you, ignore this message.</p>
         `
         : undefined,
     });
   }
 
-  async remindPassword(email: string) {
+  async remindPassword(email: string, message: string) {
     const user = await this.userRepository.findOne(email);
 
     if (!user) {
-      // Dla bezpieczeństwa możemy nic nie robić, żeby nie ujawniać istnienia konta
+      // Do not do anything, in order to not to reveal the account exists in the database
       return {
-        message:
-          'Jeśli użytkownik o takim emailu istnieje, wysłaliśmy instrukcje resetu hasła',
+        message,
       };
     }
 
-    // Wygeneruj token resetujący
     const resetToken = randomUUID();
 
-    // Ustaw token i datę wygaśnięcia (np. 1 godzina)
     user.passwordResetToken = resetToken;
     user.passwordResetTokenExpires = Date.now() + 1000 * 60 * 60; // 1h
-
+    // todo: delete all refresh tokens
     await user.save();
 
-    // Wyślij maila z linkiem resetującym
     await this.sendMailWithToken(
       email,
       resetToken,
       'Reset hasła',
-      'password-reset', // jeśli masz template, jeśli nie to undefined
-      {}, // dodatkowe dane do templatu, jeśli trzeba
-      'http://localhost:3000', // adres frontend do resetu
+      'password-reset',
+      {},
+      'http://localhost:3000',
       'token',
-      '/reset-password', // endpoint frontend do resetu hasła
+      '/reset-password',
     );
   }
 }
