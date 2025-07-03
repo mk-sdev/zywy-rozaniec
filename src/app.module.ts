@@ -7,6 +7,7 @@ import { AppService } from './app.service';
 import { jwtConstants } from './config/jwt.constants';
 import { UserrepositoryModule } from './userrepository/userrepository.module';
 import { MailerModule } from '@nestjs-modules/mailer';
+import { MailModule } from './mail/mail.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -33,6 +34,7 @@ import { MailerModule } from '@nestjs-modules/mailer';
         from: '"Twoja Apka" <no-reply@twoja-apka.pl>',
       },
     }),
+    MailModule,
   ],
   controllers: [AppController],
   providers: [

@@ -58,14 +58,6 @@ export class AppController {
     };
   }
 
-  @Get('verify/:token')
-  async verify(@Param('token') token: string) {
-    const user = await this.appService.verifyToken(token);
-    return {
-      message: 'Konto zostało pomyślnie aktywowane',
-    };
-  }
-
   @Post('login')
   @HttpCode(HttpStatus.OK)
   async signIn(
@@ -105,31 +97,7 @@ export class AppController {
     );
   }
 
-  @Patch('change-email')
-  @UseGuards(JwtGuard)
-  async changeEmail(
-    @Req() req,
-    @Body() body: { newEmail: string; password: string },
-  ) {
-    const currentEmail: string = req.user.email;
-    const { newEmail, password } = body;
 
-    this.appService.changeEmail(currentEmail, newEmail, password);
-
-    return { message: 'Email został zmieniony pomyślnie' };
-  }
-
-  @Patch('confirm-email-change')
-  async confirmEmailChange(@Query('token') token: string) {
-    if (!token) {
-      throw new BadRequestException('Token jest wymagany');
-    }
-
-    // Wywołaj logikę serwisową potwierdzającą token
-    await this.appService.confirmEmailChange(token);
-
-    return { message: 'Email został pomyślnie zweryfikowany i zmieniony' };
-  }
 
   @Delete('delete-account')
   @UseGuards(JwtGuard)
@@ -138,12 +106,7 @@ export class AppController {
     throw new Error('Niedokończona metoda');
   }
 
-  @Post('remind-password')
-  @HttpCode(HttpStatus.OK)
-  async remindPassword(@Body() body: { email: string }) {
-    const userEmail = body.email;
-    throw new Error('Niedokończona metoda');
-  }
+
 
   //* dev
   @Get('userinfo')
