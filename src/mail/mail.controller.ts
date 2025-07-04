@@ -9,10 +9,9 @@ import {
   Patch,
   Post,
   Query,
-  Req,
-  UseGuards,
+  UseGuards
 } from '@nestjs/common';
-import { UserRequest } from 'src/utils/interfaces';
+import { Id } from 'src/id.decorator';
 import { JwtGuard } from 'src/jwt.guard';
 import { MailService } from './mail.service';
 
@@ -31,10 +30,9 @@ export class MailController {
   @Patch('change-email')
   @UseGuards(JwtGuard)
   async changeEmail(
-    @Req() req: UserRequest,
+    @Id() id: string,
     @Body() body: { newEmail: string; password: string },
   ) {
-    const id = req.user!.sub;
     const { newEmail, password } = body;
 
     await this.mailService.changeEmail(id, newEmail, password);

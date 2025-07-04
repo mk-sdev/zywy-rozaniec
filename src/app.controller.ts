@@ -22,6 +22,7 @@ import { LoginDto } from './dtos/login.dto';
 import { RegisterDto } from './dtos/register.dto';
 import { JwtGuard } from './jwt.guard';
 import { ChangePasswordDto } from './dtos/changePassword.dto';
+import { Id } from './id.decorator';
 @Controller()
 @UsePipes(ValidationPipe)
 export class AppController {
@@ -83,21 +84,13 @@ export class AppController {
 
   @Patch('change-password')
   @UseGuards(JwtGuard)
-  async changePassword(
-    @Req() req: UserRequest,
-    @Body() body: ChangePasswordDto,
-  ) {
-    const id: string = req.user!.sub;
+  async changePassword(@Id() id: string, @Body() body: ChangePasswordDto) {
     return this.appService.changePassword(id, body.password, body.newPassword);
   }
 
   @Delete('delete-account')
   @UseGuards(JwtGuard)
-  async deleteAccount(
-    @Req() req: UserRequest,
-    @Body() body: { password: string },
-  ) {
-    const id: string = req.user!.sub;
+  async deleteAccount(@Id() id: string, @Body() body: { password: string }) {
     await this.appService.markForDeletion(id, body.password);
   }
 
