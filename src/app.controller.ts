@@ -24,7 +24,12 @@ import { JwtGuard } from './jwt.guard';
 import { ChangePasswordDto } from './dtos/changePassword.dto';
 import { Id } from './id.decorator';
 @Controller()
-@UsePipes(ValidationPipe)
+@UsePipes(
+  new ValidationPipe({
+    whitelist: true, // deletes additional attributes
+    forbidNonWhitelisted: true, // throws exceptions if encounters additional attributes
+  }),
+)
 export class AppController {
   constructor(private readonly appService: AppService) {}
 

@@ -1,6 +1,7 @@
 import {
   IsEmail,
   IsNotEmpty,
+  IsString,
   Matches,
   MaxLength,
   MinLength,
@@ -11,6 +12,7 @@ export class RegisterDto {
   email: string;
 
   @IsNotEmpty({ message: 'Password cannot be empty' })
+  @IsString({ message: 'Password must be a string' })
   @MinLength(8, { message: 'Password must contain at least 6 characters' })
   @MaxLength(30, { message: 'Password must contain at most 30 characters' })
   @Matches(/(?=.*[a-z])/, {
