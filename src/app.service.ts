@@ -168,8 +168,8 @@ export class AppService {
     currentPassword: string,
     newPassword: string,
   ) {
-    //todo: check if the new password meets the conditions
-    //todo: delete all the refresh tokens
+    if (currentPassword === newPassword)
+      throw new Error('New password cannot be the same as the old one');
 
     const user = await this.userRepository.findOne(id);
     if (!user) {
@@ -186,7 +186,7 @@ export class AppService {
 
     const hashedNewPassword = await bcrypt.hash(newPassword, 10);
     user.password = hashedNewPassword;
-
+    user.refreshtokens = [];
     await user.save();
   }
 

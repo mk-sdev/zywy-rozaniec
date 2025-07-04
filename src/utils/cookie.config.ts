@@ -4,15 +4,15 @@ export const accessTokenOptions: CookieOptions = {
   httpOnly: true,
   secure: false,
   sameSite: 'lax',
-  maxAge: 1000 * 10,
+  maxAge: 1000 * 60 * 10,
 };
 
 export const refreshTokenOptions: CookieOptions = {
   httpOnly: true,
   secure: false,
   sameSite: 'lax',
-  maxAge: 1000 * 30,
+  maxAge: 1000 * 60 * 30,
 };
 
-export const Accesslifespan = '10s';
-export const RefreshLifespan = '30s';
+export const Accesslifespan = '10m';
+export const RefreshLifespan = '30m';

@@ -21,6 +21,7 @@ import { UserRequest } from './utils/interfaces';
 import { LoginDto } from './dtos/login.dto';
 import { RegisterDto } from './dtos/register.dto';
 import { JwtGuard } from './jwt.guard';
+import { ChangePasswordDto } from './dtos/changePassword.dto';
 @Controller()
 @UsePipes(ValidationPipe)
 export class AppController {
@@ -84,14 +85,10 @@ export class AppController {
   @UseGuards(JwtGuard)
   async changePassword(
     @Req() req: UserRequest,
-    @Body() body: { currentPassword: string; newPassword: string },
+    @Body() body: ChangePasswordDto,
   ) {
     const id: string = req.user!.sub;
-    return this.appService.changePassword(
-      id,
-      body.currentPassword,
-      body.newPassword,
-    );
+    return this.appService.changePassword(id, body.password, body.newPassword);
   }
 
   @Delete('delete-account')
