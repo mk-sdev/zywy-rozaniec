@@ -29,8 +29,8 @@ import { EmailDto } from '../dtos/email.dto';
 export class MailController {
   constructor(private readonly mailService: MailService) {}
 
-  @Get('verify-account/:token')
-  async verify(@Param('token') token: string) {
+  @Get('verify-account')
+  async verify(@Query('token') token: string) {
     await this.mailService.verifyToken(token);
     return {
       message: 'The account has been verified successfully',
