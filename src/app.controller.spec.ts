@@ -16,10 +16,7 @@ describe('AppController (integration)', () => {
       providers: [
         {
           provide: AppService,
-          useValue: {
-            changePassword: jest.fn(),
-            markForDeletion: jest.fn(),
-          },
+          useValue: {},
         },
       ],
     })

@@ -9,13 +9,23 @@ import {
   Patch,
   Post,
   Query,
-  UseGuards
+  UseGuards,
+  UsePipes,
+  ValidationPipe,
 } from '@nestjs/common';
-import { Id } from 'src/id.decorator';
-import { JwtGuard } from 'src/jwt.guard';
+import { Id } from '../id.decorator';
+import { JwtGuard } from '../jwt.guard';
 import { MailService } from './mail.service';
+import { ChangeEmailDto } from '../dtos/changeEmail.dto';
+import { EmailDto } from '../dtos/email.dto';
 
 @Controller()
+@UsePipes(
+  new ValidationPipe({
+    whitelist: true, // deletes additional attributes
+    forbidNonWhitelisted: true, // throws exceptions if encounters additional attributes
+  }),
+)
 export class MailController {
   constructor(private readonly mailService: MailService) {}
 
@@ -29,10 +39,7 @@ export class MailController {
 
   @Patch('change-email')
   @UseGuards(JwtGuard)
-  async changeEmail(
-    @Id() id: string,
-    @Body() body: { newEmail: string; password: string },
-  ) {
+  async changeEmail(@Id() id: string, @Body() body: ChangeEmailDto) {
     const { newEmail, password } = body;
 
     await this.mailService.changeEmail(id, newEmail, password);
@@ -53,7 +60,7 @@ export class MailController {
 
   @Post('remind-password')
   @HttpCode(HttpStatus.OK)
-  async remindPassword(@Body() body: { email: string }) {
+  async remindPassword(@Body() body: EmailDto) {
     const { email } = body;
 
     const message =
