@@ -9,7 +9,7 @@ describe('AppService', () => {
 
   const mockUserRepo = {
     findOne: jest.fn(),
-    removeRefreshToken: jest.fn(), 
+    removeRefreshToken: jest.fn(),
   };
 
   const mockJwtAccessService = {};
