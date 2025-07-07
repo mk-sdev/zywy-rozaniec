@@ -39,10 +39,14 @@ export class MailService {
     }
 
     const verificationToken = randomUUID();
-    user.pendingEmail = newEmail;
-    user.emailChangeToken = verificationToken;
-    user.emailChangeTokenExpires = Date.now() + 1000 * 60 * 60; // 1h
-    await user.save();
+    const emailChangeTokenExpires = Date.now() + 1000 * 60 * 60;
+
+    await this.userRepository.markEmailChangePending(
+      id,
+      newEmail,
+      verificationToken,
+      emailChangeTokenExpires,
+    );
 
     await this.sendMailWithToken(
       newEmail,
@@ -66,9 +70,7 @@ export class MailService {
       throw new BadRequestException('The token has expired');
     }
 
-    user.isVerified = true;
-    user.verificationToken = undefined;
-    await user.save();
+    await this.userRepository.verifyAccount(String(user._id));
   }
 
   async confirmEmailChange(token: string): Promise<void> {
@@ -85,12 +87,10 @@ export class MailService {
       throw new BadRequestException('No new email address to verify');
     }
 
-    user.email = user.pendingEmail;
-    user.pendingEmail = undefined;
-    user.emailChangeToken = undefined;
-    user.emailChangeTokenExpires = undefined;
-
-    await user.save();
+    await this.userRepository.confirmEmailChange(
+      String(user._id),
+      user.pendingEmail,
+    );
   }
 
   async sendMailWithToken(
@@ -137,11 +137,13 @@ export class MailService {
     }
 
     const resetToken = randomUUID();
+    const passwordResetTokenExpires = Date.now() + 1000 * 60 * 60;
 
-    user.passwordResetToken = resetToken;
-    user.passwordResetTokenExpires = Date.now() + 1000 * 60 * 60; // 1h
-    // todo: delete all refresh tokens
-    await user.save();
+    await this.userRepository.remindPassword(
+      email,
+      resetToken,
+      passwordResetTokenExpires,
+    );
 
     await this.sendMailWithToken(
       email,

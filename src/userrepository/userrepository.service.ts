@@ -69,4 +69,125 @@ export class UserrepositoryService {
     user.refreshtokens = (user.refreshtokens || []).filter((t) => t !== token);
     await user.save();
   }
+
+  async setVerificationToken(
+    userId: string,
+    token: string,
+    expiresAt: number,
+  ): Promise<void> {
+    await this.userModel.updateOne(
+      { _id: userId },
+      {
+        $set: {
+          verificationToken: token,
+          emailChangeTokenExpires: expiresAt,
+        },
+      },
+    );
+  }
+
+  async cancelScheduledDeletion(userId: string): Promise<void> {
+    await this.userModel.updateOne(
+      { _id: userId },
+      {
+        $set: {
+          isDeletionPending: false,
+          deletionScheduledAt: undefined,
+        },
+      },
+    );
+  }
+
+  async updatePasswordAndClearTokens(
+    email: string,
+    hashedPassword: string,
+  ): Promise<void> {
+    await this.userModel.updateOne(
+      { email },
+      {
+        $set: {
+          password: hashedPassword,
+          refreshtokens: [],
+        },
+      },
+    );
+  }
+
+  async markUserForDeletion(
+    email: string,
+    deletionScheduledAt: number,
+  ): Promise<void> {
+    await this.userModel.updateOne(
+      { email },
+      {
+        $set: {
+          isDeletionPending: true,
+          deletionScheduledAt,
+        },
+      },
+    );
+  }
+
+  async markEmailChangePending(
+    id: string,
+    pendingEmail: string,
+    emailChangeToken: string,
+    emailChangeTokenExpires: number,
+  ): Promise<void> {
+    await this.userModel.updateOne(
+      { _id: id },
+      {
+        $set: {
+          pendingEmail,
+          emailChangeToken,
+          emailChangeTokenExpires,
+        },
+      },
+    );
+  }
+
+  async verifyAccount(id: string): Promise<void> {
+    await this.userModel.updateOne(
+      { _id: id },
+      {
+        $set: {
+          isVerified: true,
+        },
+        $unset: {
+          verificationToken: '',
+          verificationTokenExpires: '',
+        },
+      },
+    );
+  }
+
+  async confirmEmailChange(userId: string, newEmail: string): Promise<void> {
+    await this.userModel.updateOne(
+      { _id: userId },
+      {
+        $set: {
+          email: newEmail,
+          pendingEmail: null,
+          emailChangeToken: null,
+          emailChangeTokenExpires: null,
+        },
+      },
+    );
+  }
+
+  async remindPassword(
+    email: string,
+    resetToken: string,
+    passwordResetTokenExpires: number,
+  ) {
+    await this.userModel.updateOne(
+      { email },
+      {
+        $set: {
+          passwordResetToken: resetToken,
+          passwordResetTokenExpires,
+        },
+      },
+    );
+  }
 }

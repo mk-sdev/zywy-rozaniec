@@ -45,10 +45,14 @@ export class AppService {
     }
 
     const verificationToken = randomUUID();
+    const tokenExpiresAt = Date.now() + 1000 * 60 * 60;
 
-    newUser.verificationToken = verificationToken;
-    newUser.emailChangeTokenExpires = Date.now() + 1000 * 60 * 60;
-    await newUser.save();
+    // Przenieś zapis tokenu do repo
+    await this.userRepository.setVerificationToken(
+      newUser._id as string,
+      verificationToken,
+      tokenExpiresAt,
+    );
 
     await this.mailService.sendMailWithToken(
       email,
@@ -104,9 +108,7 @@ export class AppService {
     );
 
     if (user.isDeletionPending) {
-      user.isDeletionPending = false;
-      user.deletionScheduledAt = undefined;
-      await user.save();
+      await this.userRepository.cancelScheduledDeletion(user._id as string);
     }
 
     return {
@@ -168,15 +170,16 @@ export class AppService {
     currentPassword: string,
     newPassword: string,
   ) {
-    if (currentPassword === newPassword)
+    if (currentPassword === newPassword) {
       throw new Error('New password cannot be the same as the old one');
+    }
 
     const user = await this.userRepository.findOne(id);
     if (!user) {
       throw new ConflictException('The user of the given email doesn`t exist');
     }
 
-    const isPasswordValid: string = await bcrypt.compare(
+    const isPasswordValid = await bcrypt.compare(
       currentPassword,
       user.password,
     );
@@ -185,26 +188,26 @@ export class AppService {
     }
 
     const hashedNewPassword = await bcrypt.hash(newPassword, 10);
-    user.password = hashedNewPassword;
-    user.refreshtokens = [];
-    await user.save();
+    await this.userRepository.updatePasswordAndClearTokens(
+      user.email,
+      hashedNewPassword,
+    );
   }
 
   async markForDeletion(id: string, password: string) {
     const user = await this.userRepository.findOne(id);
-    if (!user)
+    if (!user) {
       throw new ConflictException('The user of the given email doesn`t exist');
+    }
 
-    const isPasswordValid: string = await bcrypt.compare(
-      password,
-      user.password,
-    );
+    const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
       throw new UnauthorizedException('Current password is incorrect');
     }
-
-    user.isDeletionPending = true;
-    user.deletionScheduledAt = Date.now() + 1000 * 60 * 60 * 24 * 14; // two weeks
-    await user.save();
+    const deletionScheduledAt = Date.now() + 1000 * 60 * 60 * 24 * 14;
+    await this.userRepository.markUserForDeletion(
+      user.email,
+      deletionScheduledAt,
+    );
   }
 }
