@@ -20,7 +20,7 @@ export class User {
   password: string;
 
   @Prop({ default: [] })
-  refreshtokens?: string[];
+  refreshtokens: string[];
 
   // * for the registration
 

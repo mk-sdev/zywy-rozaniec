@@ -100,8 +100,16 @@ export class AppService {
     //   secret: jwtConstants.secret,
     //   expiresIn: RefreshLifespan,
     // });
+    // * delete expired tokens
+    for (const token of user.refreshtokens) {
+      const payload: JwtPayload = this.refreshTokenService.decode(token);
 
-    //* zapisz refresh token do bazy
+      if (payload?.exp && payload.exp < Math.floor(Date.now() / 1000)) {
+        await this.userRepository.removeRefreshToken(String(user._id), token);
+      }
+    }
+
+    //* save refresh token to the db
     await this.userRepository.addRefreshToken(
       user._id as string,
       refresh_token,

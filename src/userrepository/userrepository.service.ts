@@ -60,14 +60,11 @@ export class UserrepositoryService {
     }
   }
 
-  async removeRefreshToken(id: string, token: string) {
-    const user = await this.findOne(id);
-    if (!user) {
-      throw new Error('User not found');
-    }
-
-    user.refreshtokens = (user.refreshtokens || []).filter((t) => t !== token);
-    await user.save();
+  async removeRefreshToken(userId: string, token: string): Promise<void> {
+    await this.userModel.updateOne(
+      { _id: userId },
+      { $pull: { refreshTokens: token } },
+    );
   }
 
   async setVerificationToken(
