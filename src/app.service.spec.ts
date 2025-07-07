@@ -10,6 +10,8 @@ describe('AppService', () => {
   const mockUserRepo = {
     findOne: jest.fn(),
     removeRefreshToken: jest.fn(),
+    updatePasswordAndClearTokens: jest.fn(),
+    markUserForDeletion: jest.fn(),
   };
 
   const mockJwtAccessService = {};
@@ -128,27 +130,26 @@ describe('AppService', () => {
     });
 
     it('should change password and clear refresh tokens', async () => {
-      const saveMock = jest.fn();
-
       const userMock = {
-        id: 'userId',
+        _id: 'userId',
+        email: 'test@example.com',
         password: 'hashedPassword',
         refreshtokens: ['token1', 'token2'],
-        save: saveMock,
       };
 
       mockUserRepo.findOne.mockResolvedValue(userMock);
-
       jest.spyOn(bcrypt, 'compare').mockResolvedValue(true);
       jest.spyOn(bcrypt, 'hash').mockResolvedValue('newHashedPassword');
+      mockUserRepo.updatePasswordAndClearTokens = jest
+        .fn()
+        .mockResolvedValue(undefined);
 
       await appService.changePassword('userId', 'oldPassword', 'newPassword');
 
-      expect(userMock.refreshtokens).toEqual([]);
-
-      expect(userMock.password).toEqual('newHashedPassword');
-
-      expect(saveMock).toHaveBeenCalled();
+      expect(mockUserRepo.updatePasswordAndClearTokens).toHaveBeenCalledWith(
+        userMock.email,
+        'newHashedPassword',
+      );
     });
   });
 
@@ -175,29 +176,27 @@ describe('AppService', () => {
     });
 
     it('should mark user for deletion and save', async () => {
-      const saveMock = jest.fn();
-
-      mockUserRepo.findOne.mockResolvedValue({
-        id: 'userId',
+      const userMock = {
+        _id: 'userId',
+        email: 'test@example.com',
         password: 'hashedPassword',
-        save: saveMock,
-      });
+      };
 
+      mockUserRepo.findOne.mockResolvedValue(userMock);
       jest.spyOn(bcrypt, 'compare').mockResolvedValue(true);
+      mockUserRepo.markUserForDeletion = jest.fn().mockResolvedValue(undefined);
 
       const before = Date.now();
 
       await appService.markForDeletion('userId', 'correctPassword');
 
-      const user = await mockUserRepo.findOne.mock.results[0].value;
-      expect(user.isDeletionPending).toBe(true);
-      expect(user.deletionScheduledAt).toBeGreaterThan(
-        before + 1000 * 60 * 60 * 24 * 13,
-      ); // over 13 days
-      expect(user.deletionScheduledAt).toBeLessThan(
-        before + 1000 * 60 * 60 * 24 * 15,
-      ); // less than 15 days
-      expect(saveMock).toHaveBeenCalled();
+      expect(mockUserRepo.markUserForDeletion).toHaveBeenCalled();
+      const callArgs = mockUserRepo.markUserForDeletion.mock.calls[0];
+      expect(callArgs[0]).toEqual(userMock.email);
+
+      // deletionScheduledAt jest timestampem - sprawdź, czy jest w oczekiwanym zakresie
+      expect(callArgs[1]).toBeGreaterThan(before + 1000 * 60 * 60 * 24 * 13);
+      expect(callArgs[1]).toBeLessThan(before + 1000 * 60 * 60 * 24 * 15);
     });
   });
 });
