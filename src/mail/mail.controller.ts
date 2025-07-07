@@ -5,9 +5,11 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  NotFoundException,
   Patch,
   Post,
   Query,
+  Res,
   UseGuards,
   UsePipes,
   ValidationPipe,
@@ -18,6 +20,8 @@ import { Id } from '../id.decorator';
 import { JwtGuard } from '../jwt.guard';
 import { MailService } from './mail.service';
 import { RegisterDto } from 'src/dtos/register.dto';
+import { ResetPasswordDto } from 'src/dtos/resetPassword.dto';
+import { Response } from 'express';
 
 // * this controller handles mailing-related endpoints
 @Controller()
@@ -81,5 +85,8 @@ export class MailController {
     };
   }
 
-  // todo: add reset-password endpoint
+  @Patch('reset-password')
+  async resetPassword(@Body() body: ResetPasswordDto) {
+    return this.mailService.resetPassword(body.token, body.newPassword);
+  }
 }

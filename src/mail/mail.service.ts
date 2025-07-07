@@ -207,5 +207,21 @@ export class MailService {
     );
   }
 
-  
+  async resetPassword(token: string, newPassword: string) {
+    const user =
+      await this.repositoryService.findOneByPasswordResetToken(token);
+    if (!user) throw new NotFoundException('Invalid token');
+    if (
+      !user.passwordResetTokenExpires ||
+      user.passwordResetTokenExpires < Date.now()
+    )
+      throw new UnauthorizedException('Token expired');
+    const password: string = await bcrypt.hash(newPassword, 10);
+    await this.repositoryService.setNewPasswordFromResetToken(token, password);
+
+    return {
+      message:
+        'New password has been set successfully. You can now use it to sign in.',
+    };
+  }
 }

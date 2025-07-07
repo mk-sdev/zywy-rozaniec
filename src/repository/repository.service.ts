@@ -28,6 +28,12 @@ export class RepositoryService {
     return this.userModel.findOne({ emailChangeToken: token });
   }
 
+  async findOneByPasswordResetToken(
+    token: string,
+  ): Promise<UserDocument | null> {
+    return this.userModel.findOne({ passwordResetToken: token });
+  }
+
   async addRefreshToken(id: string, token: string): Promise<void> {
     await this.userModel.updateOne(
       { _id: id, refreshTokens: { $ne: token } }, // $ne helps to avoid duplicates
@@ -99,6 +105,22 @@ export class RepositoryService {
         $set: {
           password: hashedPassword,
           refreshTokens: [],
+        },
+      },
+    );
+  }
+
+  async setNewPasswordFromResetToken(token: string, newPassword: string) {
+    await this.userModel.updateOne(
+      { passwordResetToken: token },
+      {
+        $set: {
+          password: newPassword,
+          refreshTokens: [],
+        },
+        $unset: {
+          passwordResetToken: '',
+          passwordResetTokenExpires: '',
         },
       },
     );
