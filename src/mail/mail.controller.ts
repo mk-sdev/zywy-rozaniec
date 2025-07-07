@@ -5,7 +5,6 @@ import {
   Get,
   HttpCode,
   HttpStatus,
-  Param,
   Patch,
   Post,
   Query,
@@ -13,12 +12,14 @@ import {
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
+import { ChangeEmailDto } from '../dtos/changeEmail.dto';
+import { EmailDto } from '../dtos/email.dto';
 import { Id } from '../id.decorator';
 import { JwtGuard } from '../jwt.guard';
 import { MailService } from './mail.service';
-import { ChangeEmailDto } from '../dtos/changeEmail.dto';
-import { EmailDto } from '../dtos/email.dto';
+import { RegisterDto } from 'src/dtos/register.dto';
 
+// * this controller handles mailing-related endpoints
 @Controller()
 @UsePipes(
   new ValidationPipe({
@@ -28,6 +29,14 @@ import { EmailDto } from '../dtos/email.dto';
 )
 export class MailController {
   constructor(private readonly mailService: MailService) {}
+
+  @Post('register')
+  @HttpCode(HttpStatus.CREATED)
+  async register(@Body() registerDto: RegisterDto) {
+    const message = 'Verification link has been sent to your email address';
+    await this.mailService.register(registerDto.email, registerDto.password);
+    return { message };
+  }
 
   @Get('verify-account')
   async verify(@Query('token') token: string) {
@@ -53,12 +62,12 @@ export class MailController {
       throw new BadRequestException('Verification token is required');
     }
 
-    await this.mailService.confirmEmailChange(token);
+    await this.mailService.verifyEmail(token);
 
     return { message: 'Email has been successfully verified and changed' };
   }
 
-  @Post('remind-password')
+  @Patch('remind-password')
   @HttpCode(HttpStatus.OK)
   async remindPassword(@Body() body: EmailDto) {
     const { email } = body;
@@ -71,4 +80,6 @@ export class MailController {
       message,
     };
   }
+
+  // todo: add reset-password endpoint
 }

@@ -2,19 +2,13 @@ import {
   ConflictException,
   Inject,
   Injectable,
-  InternalServerErrorException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
-import { randomUUID } from 'crypto';
-import { MailService } from './mail/mail.service';
 import { RepositoryService } from './repository/repository.service';
+import { account_deletion_lifespan } from './utils/constants';
 import { JwtPayload } from './utils/interfaces';
-import {
-  account_deletion_lifespan,
-  account_verification_lifespan,
-} from './utils/constants';
 
 @Injectable()
 export class AppService {
@@ -24,53 +18,9 @@ export class AppService {
     private readonly accessTokenService: JwtService,
     @Inject('JWT_REFRESH_SERVICE')
     private readonly refreshTokenService: JwtService,
-    private readonly mailService: MailService,
   ) {}
 
-  async register(email: string, password: string): Promise<void> {
-    const existingUser = await this.repositoryService.findOneByEmail(email);
-    if (existingUser) {
-      // do not do anything to not to reveal the account exists in the db
-      // throw new ConflictException('Email already in use');
-    }
-
-    // @ts-ignore
-    const hashedPassword = await bcrypt.hash(password, 10); // 10 salt rounds
-
-    // Dodaj użytkownika do bazy
-    await this.repositoryService.insertOne({
-      email,
-      password: hashedPassword,
-    });
-
-    const newUser = await this.repositoryService.findOneByEmail(email);
-    if (!newUser) {
-      throw new InternalServerErrorException('User creation failed');
-    }
-
-    const verificationToken = randomUUID();
-    const tokenExpiresAt = Date.now() + account_verification_lifespan;
-
-    // Przenieś zapis tokenu do repo
-    await this.repositoryService.setVerificationToken(
-      newUser._id as string,
-      verificationToken,
-      tokenExpiresAt,
-    );
-
-    await this.mailService.sendMailWithToken(
-      email,
-      verificationToken,
-      'Aktywuj swoje konto',
-      undefined, // no template
-      undefined,
-      'http://localhost:3000',
-      'token',
-      '/verify-account',
-    );
-  }
-
-  async signIn(
+  async login(
     email: string,
     password: string,
   ): Promise<{ access_token: string; refresh_token: string }> {
@@ -132,8 +82,21 @@ export class AppService {
     };
   }
 
-  ///*
+  async logout(refresh_token: string) {
+    try {
+      const payload: JwtPayload =
+        await this.refreshTokenService.verifyAsync(refresh_token);
+      await this.repositoryService.removeRefreshToken(
+        payload.sub,
+        refresh_token,
+      );
+    } catch (err) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      console.warn('Logout error:', err.message);
+    }
+  }
 
+  // creates both new access and refresh tokens
   async refreshTokens(
     refresh_token: string,
   ): Promise<{ access_token: string; refresh_token: string }> {
@@ -165,21 +128,6 @@ export class AppService {
     } catch (err) {
       console.error(err);
       throw new UnauthorizedException('Could not refresh tokens: ' + err);
-    }
-  }
-
-  async logout(refresh_token: string) {
-    try {
-      const payload: JwtPayload =
-        await this.refreshTokenService.verifyAsync(refresh_token);
-      await this.repositoryService.removeRefreshToken(
-        payload.sub,
-        refresh_token,
-      );
-    } catch (err) {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-      console.warn('Logout error:', err.message);
-      // You can throw an error or not
     }
   }
 
