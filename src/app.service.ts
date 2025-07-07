@@ -11,6 +11,10 @@ import { randomUUID } from 'crypto';
 import { MailService } from './mail/mail.service';
 import { UserrepositoryService } from './userrepository/userrepository.service';
 import { JwtPayload } from './utils/interfaces';
+import {
+  account_deletion_lifespan,
+  account_verification_lifespan,
+} from './utils/constants';
 
 @Injectable()
 export class AppService {
@@ -45,7 +49,7 @@ export class AppService {
     }
 
     const verificationToken = randomUUID();
-    const tokenExpiresAt = Date.now() + 1000 * 60 * 60;
+    const tokenExpiresAt = Date.now() + account_verification_lifespan;
 
     // Przenieś zapis tokenu do repo
     await this.userRepository.setVerificationToken(
@@ -212,7 +216,7 @@ export class AppService {
     if (!isPasswordValid) {
       throw new UnauthorizedException('Current password is incorrect');
     }
-    const deletionScheduledAt = Date.now() + 1000 * 60 * 60 * 24 * 14;
+    const deletionScheduledAt = Date.now() + account_deletion_lifespan;
     await this.userRepository.markUserForDeletion(
       user.email,
       deletionScheduledAt,

@@ -2,10 +2,10 @@ import { Module } from '@nestjs/common';
 import { MailController } from './mail.controller';
 import { MailService } from './mail.service';
 import { UserrepositoryModule } from '../userrepository/userrepository.module';
-import { JwtModule } from '../jwt/jwt.module';
+import { TokensModule } from '../utils/tokens.module';
 
 @Module({
-  imports: [UserrepositoryModule, JwtModule],
+  imports: [UserrepositoryModule, TokensModule],
   controllers: [MailController],
   providers: [MailService],
   exports: [MailService],

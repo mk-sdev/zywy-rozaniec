@@ -5,7 +5,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { MongooseModule } from '@nestjs/mongoose';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { JwtModule as JwtModule_ } from './jwt/jwt.module';
+import { TokensModule } from './utils/tokens.module';
 import { MailModule } from './mail/mail.module';
 import { UserrepositoryModule } from './userrepository/userrepository.module';
 @Module({
@@ -15,7 +15,7 @@ import { UserrepositoryModule } from './userrepository/userrepository.module';
     }),
     UserrepositoryModule,
     MongooseModule.forRoot('mongodb://localhost:27017/imagehub'),
-    JwtModule_,
+    TokensModule,
     MailerModule.forRoot({
       transport: {
         host: 'sandbox.smtp.mailtrap.io',

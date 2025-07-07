@@ -1,0 +1,29 @@
+import { CookieOptions } from 'express';
+
+export const accessTokenOptions: CookieOptions = {
+  httpOnly: true,
+  secure: false,
+  sameSite: 'lax',
+  maxAge: 1000 * 60 * 10, // 10 minutes
+};
+
+export const refreshTokenOptions: CookieOptions = {
+  httpOnly: true,
+  secure: false,
+  sameSite: 'lax',
+  maxAge: 1000 * 60 * 30, //30 minutes
+};
+
+// access jwt lifespan
+export const access_jwt_lifespan = '10m';
+// refresh jwt lifespan
+export const refresh_jwt_lifespan = '30m';
+
+// token lifespan to confirm password change
+export const password_reset_lifespan = 1000 * 60 * 60; // 1h
+// token lifespan to confirm email change
+export const email_change_lifespan = 1000 * 60 * 60; // 1h
+// account verification token lifespan
+export const account_verification_lifespan = 1000 * 60 * 60; // 1h
+// period between deleting account by a user and its actual deletion in the db
+export const account_deletion_lifespan = 1000 * 60 * 60 * 24 * 14; //2 weeks

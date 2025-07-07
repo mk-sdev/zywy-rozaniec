@@ -1,7 +1,6 @@
-// src/auth/auth.module.ts
 import { Module } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { jwtConstants } from '../utils/jwt.constants';
+import { access_jwt_lifespan, refresh_jwt_lifespan } from './constants';
 
 @Module({
   providers: [
@@ -10,7 +9,7 @@ import { jwtConstants } from '../utils/jwt.constants';
       useFactory: () => {
         return new JwtService({
           secret: process.env.JWT_ACCESS_SECRET,
-          signOptions: { expiresIn: jwtConstants.accessExpiresIn },
+          signOptions: { expiresIn: access_jwt_lifespan },
         });
       },
     },
@@ -19,11 +18,11 @@ import { jwtConstants } from '../utils/jwt.constants';
       useFactory: () => {
         return new JwtService({
           secret: process.env.JWT_REFRESH_SECRET,
-          signOptions: { expiresIn: jwtConstants.refreshExpiresIn },
+          signOptions: { expiresIn: refresh_jwt_lifespan },
         });
       },
     },
   ],
   exports: ['JWT_ACCESS_SERVICE', 'JWT_REFRESH_SERVICE'],
 })
-export class JwtModule {}
+export class TokensModule {}

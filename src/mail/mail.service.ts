@@ -9,6 +9,7 @@ import {
 import * as bcrypt from 'bcrypt';
 import { randomUUID } from 'crypto';
 import { UserrepositoryService } from '../userrepository/userrepository.service';
+import { email_change_lifespan, password_reset_lifespan } from 'src/utils/constants';
 
 @Injectable()
 export class MailService {
@@ -39,7 +40,7 @@ export class MailService {
     }
 
     const verificationToken = randomUUID();
-    const emailChangeTokenExpires = Date.now() + 1000 * 60 * 60;
+    const emailChangeTokenExpires = Date.now() + email_change_lifespan;
 
     await this.userRepository.markEmailChangePending(
       id,
@@ -137,7 +138,7 @@ export class MailService {
     }
 
     const resetToken = randomUUID();
-    const passwordResetTokenExpires = Date.now() + 1000 * 60 * 60;
+    const passwordResetTokenExpires = Date.now() + password_reset_lifespan;
 
     await this.userRepository.remindPassword(
       email,

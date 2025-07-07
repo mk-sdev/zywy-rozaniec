@@ -2,9 +2,9 @@ import { Request } from 'express';
 
 export interface JwtPayload {
   sub: string;
+  iat: number;
+  exp: number;
   // email: string;
-  iat?: number;
-  exp?: number;
 }
 
 export interface UserRequest extends Request {
