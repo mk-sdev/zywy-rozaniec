@@ -9,7 +9,7 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { randomUUID } from 'crypto';
 import { MailService } from './mail/mail.service';
-import { UserrepositoryService } from './userrepository/userrepository.service';
+import { RepositoryService } from './repository/repository.service';
 import { JwtPayload } from './utils/interfaces';
 import {
   account_deletion_lifespan,
@@ -19,7 +19,7 @@ import {
 @Injectable()
 export class AppService {
   constructor(
-    private userRepository: UserrepositoryService,
+    private repositoryService: RepositoryService,
     @Inject('JWT_ACCESS_SERVICE')
     private readonly accessTokenService: JwtService,
     @Inject('JWT_REFRESH_SERVICE')
@@ -28,7 +28,7 @@ export class AppService {
   ) {}
 
   async register(email: string, password: string): Promise<void> {
-    const existingUser = await this.userRepository.findOneByEmail(email);
+    const existingUser = await this.repositoryService.findOneByEmail(email);
     if (existingUser) {
       // do not do anything to not to reveal the account exists in the db
       // throw new ConflictException('Email already in use');
@@ -38,12 +38,12 @@ export class AppService {
     const hashedPassword = await bcrypt.hash(password, 10); // 10 salt rounds
 
     // Dodaj użytkownika do bazy
-    await this.userRepository.insertOne({
+    await this.repositoryService.insertOne({
       email,
       password: hashedPassword,
     });
 
-    const newUser = await this.userRepository.findOneByEmail(email);
+    const newUser = await this.repositoryService.findOneByEmail(email);
     if (!newUser) {
       throw new InternalServerErrorException('User creation failed');
     }
@@ -52,7 +52,7 @@ export class AppService {
     const tokenExpiresAt = Date.now() + account_verification_lifespan;
 
     // Przenieś zapis tokenu do repo
-    await this.userRepository.setVerificationToken(
+    await this.repositoryService.setVerificationToken(
       newUser._id as string,
       verificationToken,
       tokenExpiresAt,
@@ -74,7 +74,7 @@ export class AppService {
     email: string,
     password: string,
   ): Promise<{ access_token: string; refresh_token: string }> {
-    const user = await this.userRepository.findOneByEmail(email); //* find a user with a provided email
+    const user = await this.repositoryService.findOneByEmail(email); //* find a user with a provided email
     if (!user) {
       throw new UnauthorizedException();
     }
@@ -105,22 +105,25 @@ export class AppService {
     //   expiresIn: RefreshLifespan,
     // });
     // * delete expired tokens
-    for (const token of user.refreshtokens) {
+    for (const token of user.refreshTokens) {
       const payload: JwtPayload = this.refreshTokenService.decode(token);
 
       if (payload?.exp && payload.exp < Math.floor(Date.now() / 1000)) {
-        await this.userRepository.removeRefreshToken(String(user._id), token);
+        await this.repositoryService.removeRefreshToken(
+          String(user._id),
+          token,
+        );
       }
     }
 
     //* save refresh token to the db
-    await this.userRepository.addRefreshToken(
+    await this.repositoryService.addRefreshToken(
       user._id as string,
       refresh_token,
     );
 
     if (user.isDeletionPending) {
-      await this.userRepository.cancelScheduledDeletion(user._id as string);
+      await this.repositoryService.cancelScheduledDeletion(user._id as string);
     }
 
     return {
@@ -137,9 +140,9 @@ export class AppService {
     try {
       const refreshPayload: JwtPayload =
         await this.refreshTokenService.verifyAsync(refresh_token);
-      const user = await this.userRepository.findOne(refreshPayload.sub);
+      const user = await this.repositoryService.findOne(refreshPayload.sub);
 
-      if (!user || !user.refreshtokens?.includes(refresh_token)) {
+      if (!user || !user.refreshTokens?.includes(refresh_token)) {
         throw new UnauthorizedException('Invalid refresh token');
       }
 
@@ -149,7 +152,7 @@ export class AppService {
       const newRefreshToken =
         await this.refreshTokenService.signAsync(newPayload);
 
-      await this.userRepository.replaceRefreshToken(
+      await this.repositoryService.replaceRefreshToken(
         user._id as string,
         refresh_token,
         newRefreshToken,
@@ -169,7 +172,10 @@ export class AppService {
     try {
       const payload: JwtPayload =
         await this.refreshTokenService.verifyAsync(refresh_token);
-      await this.userRepository.removeRefreshToken(payload.sub, refresh_token);
+      await this.repositoryService.removeRefreshToken(
+        payload.sub,
+        refresh_token,
+      );
     } catch (err) {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       console.warn('Logout error:', err.message);
@@ -186,7 +192,7 @@ export class AppService {
       throw new Error('New password cannot be the same as the old one');
     }
 
-    const user = await this.userRepository.findOne(id);
+    const user = await this.repositoryService.findOne(id);
     if (!user) {
       throw new ConflictException('The user of the given email doesn`t exist');
     }
@@ -200,14 +206,14 @@ export class AppService {
     }
 
     const hashedNewPassword = await bcrypt.hash(newPassword, 10);
-    await this.userRepository.updatePasswordAndClearTokens(
+    await this.repositoryService.updatePasswordAndClearTokens(
       user.email,
       hashedNewPassword,
     );
   }
 
   async markForDeletion(id: string, password: string) {
-    const user = await this.userRepository.findOne(id);
+    const user = await this.repositoryService.findOne(id);
     if (!user) {
       throw new ConflictException('The user of the given email doesn`t exist');
     }
@@ -217,7 +223,7 @@ export class AppService {
       throw new UnauthorizedException('Current password is incorrect');
     }
     const deletionScheduledAt = Date.now() + account_deletion_lifespan;
-    await this.userRepository.markUserForDeletion(
+    await this.repositoryService.markUserForDeletion(
       user.email,
       deletionScheduledAt,
     );

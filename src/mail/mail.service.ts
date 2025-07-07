@@ -8,18 +8,21 @@ import {
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { randomUUID } from 'crypto';
-import { UserrepositoryService } from '../userrepository/userrepository.service';
-import { email_change_lifespan, password_reset_lifespan } from 'src/utils/constants';
+import { RepositoryService } from '../repository/repository.service';
+import {
+  email_change_lifespan,
+  password_reset_lifespan,
+} from 'src/utils/constants';
 
 @Injectable()
 export class MailService {
   constructor(
-    private userRepository: UserrepositoryService,
+    private repositoryService: RepositoryService,
     private readonly mailerService: MailerService,
   ) {}
 
   async changeEmail(id: string, newEmail: string, password: string) {
-    const user = await this.userRepository.findOne(id);
+    const user = await this.repositoryService.findOne(id);
     if (!user) {
       throw new NotFoundException(
         'User with the given email address doesn`t exist',
@@ -34,7 +37,7 @@ export class MailService {
       throw new UnauthorizedException('Incorrect password');
     }
 
-    const emailExists = await this.userRepository.findOneByEmail(newEmail);
+    const emailExists = await this.repositoryService.findOneByEmail(newEmail);
     if (emailExists) {
       throw new ConflictException('This email is already in use!');
     }
@@ -42,7 +45,7 @@ export class MailService {
     const verificationToken = randomUUID();
     const emailChangeTokenExpires = Date.now() + email_change_lifespan;
 
-    await this.userRepository.markEmailChangePending(
+    await this.repositoryService.markEmailChangePending(
       id,
       newEmail,
       verificationToken,
@@ -62,7 +65,7 @@ export class MailService {
   }
 
   async verifyToken(token: string): Promise<void> {
-    const user = await this.userRepository.findOneByToken(token);
+    const user = await this.repositoryService.findOneByToken(token);
     if (!user) {
       throw new BadRequestException('Invalid token');
     }
@@ -71,11 +74,11 @@ export class MailService {
       throw new BadRequestException('The token has expired');
     }
 
-    await this.userRepository.verifyAccount(String(user._id));
+    await this.repositoryService.verifyAccount(String(user._id));
   }
 
   async confirmEmailChange(token: string): Promise<void> {
-    const user = await this.userRepository.findOneByEmailToken(token);
+    const user = await this.repositoryService.findOneByEmailToken(token);
 
     if (!user) {
       throw new BadRequestException('Invalid token');
@@ -88,7 +91,7 @@ export class MailService {
       throw new BadRequestException('No new email address to verify');
     }
 
-    await this.userRepository.confirmEmailChange(
+    await this.repositoryService.confirmEmailChange(
       String(user._id),
       user.pendingEmail,
     );
@@ -128,7 +131,7 @@ export class MailService {
   }
 
   async remindPassword(email: string, message: string) {
-    const user = await this.userRepository.findOneByEmail(email);
+    const user = await this.repositoryService.findOneByEmail(email);
 
     if (!user) {
       // Do not do anything, in order to not to reveal the account exists in the database
@@ -140,7 +143,7 @@ export class MailService {
     const resetToken = randomUUID();
     const passwordResetTokenExpires = Date.now() + password_reset_lifespan;
 
-    await this.userRepository.remindPassword(
+    await this.repositoryService.remindPassword(
       email,
       resetToken,
       passwordResetTokenExpires,

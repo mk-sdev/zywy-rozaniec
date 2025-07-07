@@ -4,7 +4,7 @@ import { Model } from 'mongoose';
 import { UserDocument } from './user.schema';
 
 @Injectable()
-export class UserrepositoryService {
+export class RepositoryService {
   constructor(@InjectModel('User') private userModel: Model<UserDocument>) {}
 
   async insertOne({ email, password }: { email: string; password: string }) {
@@ -28,35 +28,29 @@ export class UserrepositoryService {
     return this.userModel.findOne({ emailChangeToken: token });
   }
 
-  async addRefreshToken(id: string, token: string) {
-    const user = await this.findOne(id);
-    if (!user) {
-      throw new Error('User not found');
-    }
-
-    if (!user.refreshtokens) {
-      user.refreshtokens = [];
-    }
-
-    // Avoid duplicates
-    if (!user.refreshtokens.includes(token)) {
-      user.refreshtokens.push(token);
-      await user.save();
-    }
+  async addRefreshToken(id: string, token: string): Promise<void> {
+    await this.userModel.updateOne(
+      { _id: id, refreshTokens: { $ne: token } }, // $ne helps to avoid duplicates
+      { $push: { refreshTokens: token } },
+    );
   }
 
-  async replaceRefreshToken(id: string, oldToken: string, newToken: string) {
-    const user = await this.findOne(id);
-    if (!user || !user.refreshtokens) return;
+  async replaceRefreshToken(
+    id: string,
+    oldToken: string,
+    newToken: string,
+  ): Promise<void> {
+    const result = await this.userModel.updateOne(
+      { _id: id, refreshTokens: oldToken },
+      { $set: { 'refreshTokens.$': newToken } },
+    );
 
-    const index = user.refreshtokens.indexOf(oldToken);
-    if (index !== -1) {
-      user.refreshtokens[index] = newToken;
-      await user.save();
-    } else {
-      // fallback - add new if the old one wasn't found
-      user.refreshtokens.push(newToken);
-      await user.save();
+    // if old token hasn't been found, just add a new one
+    if (result.matchedCount === 0) {
+      await this.userModel.updateOne(
+        { _id: id },
+        { $push: { refreshTokens: newToken } },
+      );
     }
   }
 
@@ -104,7 +98,7 @@ export class UserrepositoryService {
       {
         $set: {
           password: hashedPassword,
-          refreshtokens: [],
+          refreshTokens: [],
         },
       },
     );

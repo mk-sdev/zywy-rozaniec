@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AppService } from './app.service';
-import { UserrepositoryService } from './userrepository/userrepository.service';
+import { RepositoryService } from './repository/repository.service';
 import { MailService } from './mail/mail.service';
 import * as bcrypt from 'bcrypt';
 
@@ -30,7 +30,7 @@ describe('AppService', () => {
       providers: [
         AppService,
         {
-          provide: UserrepositoryService,
+          provide: RepositoryService,
           useValue: mockUserRepo,
         },
         {

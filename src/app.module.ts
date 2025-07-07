@@ -7,7 +7,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { TokensModule } from './utils/tokens.module';
 import { MailModule } from './mail/mail.module';
-import { UserrepositoryModule } from './userrepository/userrepository.module';
+import { UserrepositoryModule } from './repository/repository.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
