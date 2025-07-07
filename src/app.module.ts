@@ -1,13 +1,13 @@
+import { MailerModule } from '@nestjs-modules/mailer';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { JwtModule, JwtService } from '@nestjs/jwt';
+import { JwtModule } from '@nestjs/jwt';
 import { MongooseModule } from '@nestjs/mongoose';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { jwtConstants } from './utils/jwt.constants';
-import { UserrepositoryModule } from './userrepository/userrepository.module';
-import { MailerModule } from '@nestjs-modules/mailer';
+import { JwtModule as JwtModule_ } from './jwt/jwt.module';
 import { MailModule } from './mail/mail.module';
+import { UserrepositoryModule } from './userrepository/userrepository.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -15,11 +15,7 @@ import { MailModule } from './mail/mail.module';
     }),
     UserrepositoryModule,
     MongooseModule.forRoot('mongodb://localhost:27017/imagehub'),
-    JwtModule.register({
-      global: true,
-      secret: jwtConstants.accessSecret,
-      signOptions: { expiresIn: jwtConstants.accessExpiresIn },
-    }),
+    JwtModule_,
     MailerModule.forRoot({
       transport: {
         host: 'sandbox.smtp.mailtrap.io',
@@ -35,29 +31,9 @@ import { MailModule } from './mail/mail.module';
       },
     }),
     MailModule,
+    JwtModule,
   ],
   controllers: [AppController],
-  providers: [
-    AppService,
-    {
-      provide: 'JWT_ACCESS_SERVICE',
-      useFactory: () => {
-        return new JwtService({
-          secret: jwtConstants.accessSecret,
-          signOptions: { expiresIn: jwtConstants.accessExpiresIn },
-        });
-      },
-    },
-    {
-      provide: 'JWT_REFRESH_SERVICE',
-      useFactory: () => {
-        return new JwtService({
-          secret: jwtConstants.refreshSecret,
-          signOptions: { expiresIn: jwtConstants.refreshExpiresIn },
-        });
-      },
-    },
-  ],
-  exports: ['JWT_ACCESS_SERVICE', 'JWT_REFRESH_SERVICE'],
+  providers: [AppService],
 })
 export class AppModule {}
