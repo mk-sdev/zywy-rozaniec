@@ -7,7 +7,7 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import * as bcrypt from 'bcrypt';
+import * as argon2 from 'argon2';
 import { randomUUID } from 'crypto';
 import {
   account_verification_lifespan,
@@ -63,8 +63,7 @@ export class MailService {
       // throw new ConflictException('Email already in use');
     }
 
-    // @ts-ignore
-    const hashedPassword = await bcrypt.hash(password, 10); // 10 salt rounds
+    const hashedPassword = await argon2.hash(password); // 10 salt rounds
 
     // Dodaj użytkownika do bazy
     await this.repositoryService.insertOne({
@@ -121,9 +120,9 @@ export class MailService {
       );
     }
 
-    const isPasswordValid: boolean = await bcrypt.compare(
-      password,
+    const isPasswordValid: boolean = await argon2.verify(
       user.password,
+      password,
     );
     if (!isPasswordValid) {
       throw new UnauthorizedException('Incorrect password');
@@ -216,7 +215,7 @@ export class MailService {
       user.passwordResetTokenExpires < Date.now()
     )
       throw new UnauthorizedException('Token expired');
-    const password: string = await bcrypt.hash(newPassword, 10);
+    const password: string = await argon2.hash(newPassword);
     await this.repositoryService.setNewPasswordFromResetToken(token, password);
 
     return {

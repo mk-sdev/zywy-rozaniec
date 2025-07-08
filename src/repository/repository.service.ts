@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { UserDocument } from './user.schema';
-
 @Injectable()
 export class RepositoryService {
   constructor(@InjectModel('User') private userModel: Model<UserDocument>) {}
@@ -35,8 +34,9 @@ export class RepositoryService {
   }
 
   async addRefreshToken(id: string, token: string): Promise<void> {
+    console.log('🚀 ~ RepositoryService ~ addRefreshToken ~ token:', token);
     await this.userModel.updateOne(
-      { _id: id, refreshTokens: { $ne: token } }, // $ne helps to avoid duplicates
+      { _id: id },
       { $push: { refreshTokens: token } },
     );
   }
@@ -67,6 +67,20 @@ export class RepositoryService {
     );
   }
 
+  async trimRefreshTokens(userId: string, maxTokens = 5): Promise<void> {
+    await this.userModel.updateOne(
+      { _id: userId },
+      {
+        $push: {
+          refreshTokens: {
+            $each: [],
+            $slice: -maxTokens, // leaves 5 last (most recent) tokens
+          },
+        },
+      },
+    );
+  }
+
   async setVerificationToken(
     userId: string,
     token: string,
@@ -77,7 +91,7 @@ export class RepositoryService {
       {
         $set: {
           verificationToken: token,
-          emailChangeTokenExpires: expiresAt,
+          verificationTokenExpires: expiresAt,
         },
       },
     );

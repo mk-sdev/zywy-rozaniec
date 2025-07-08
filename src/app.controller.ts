@@ -11,7 +11,7 @@ import {
   UnauthorizedException,
   UseGuards,
   UsePipes,
-  ValidationPipe
+  ValidationPipe,
 } from '@nestjs/common';
 import { Response } from 'express';
 import { AppService } from './app.service';
