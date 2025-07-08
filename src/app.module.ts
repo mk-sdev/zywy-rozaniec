@@ -7,13 +7,13 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { TokensModule } from './utils/tokens.module';
 import { MailModule } from './mail/mail.module';
-import { UserrepositoryModule } from './repository/repository.module';
+import { RepositoryModule } from './repository/repository.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true, // lets use process.env in the whole app
     }),
-    UserrepositoryModule,
+    RepositoryModule,
     MongooseModule.forRoot('mongodb://localhost:27017/imagehub'),
     TokensModule,
     MailerModule.forRoot({

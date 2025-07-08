@@ -27,3 +27,6 @@ export const email_change_lifespan = 1000 * 60 * 60; // 1h
 export const account_verification_lifespan = 1000 * 60 * 60; // 1h
 // period between deleting account by a user and its actual deletion in the db
 export const account_deletion_lifespan = 1000 * 60 * 60 * 24 * 14; //2 weeks
+
+export const URL = 'http://localhost:3000';
+export const FRONTEND_URL = 'http://localhost:8081';

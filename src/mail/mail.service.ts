@@ -12,10 +12,11 @@ import { randomUUID } from 'crypto';
 import {
   account_verification_lifespan,
   email_change_lifespan,
+  FRONTEND_URL,
   password_reset_lifespan,
 } from 'src/utils/constants';
 import { RepositoryService } from '../repository/repository.service';
-
+import { URL } from 'src/utils/constants';
 @Injectable()
 export class MailService {
   constructor(
@@ -92,7 +93,7 @@ export class MailService {
       'Aktywuj swoje konto',
       undefined, // no template
       undefined,
-      'http://localhost:3000',
+      URL,
       'token',
       '/verify-account',
     );
@@ -100,7 +101,7 @@ export class MailService {
 
   // verifies a registration token
   async verifyToken(token: string): Promise<void> {
-    const user = await this.repositoryService.findOneByToken(token);
+    const user = await this.repositoryService.findOneByVerificationToken(token);
     if (!user) {
       throw new BadRequestException('Invalid token');
     }
@@ -149,7 +150,7 @@ export class MailService {
       'Confirm email address change',
       'email-change-confirmation',
       {},
-      'http://localhost:3000',
+      URL,
       'token',
       '/verify-email',
     );
@@ -200,7 +201,7 @@ export class MailService {
       'Reset hasła',
       'password-reset',
       {},
-      'http://localhost:3000',
+      FRONTEND_URL,
       'token',
       '/reset-password',
     );

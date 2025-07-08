@@ -19,7 +19,9 @@ export class RepositoryService {
     return this.userModel.findOne({ email });
   }
 
-  async findOneByToken(token: string): Promise<UserDocument | null> {
+  async findOneByVerificationToken(
+    token: string,
+  ): Promise<UserDocument | null> {
     return this.userModel.findOne({ verificationToken: token });
   }
 

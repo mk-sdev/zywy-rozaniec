@@ -8,4 +8,4 @@ import { RepositoryService } from './repository.service';
   providers: [RepositoryService],
   exports: [RepositoryService],
 })
-export class UserrepositoryModule {}
+export class RepositoryModule {}
