@@ -8,14 +8,23 @@ import { AppService } from './app.service';
 import { TokensModule } from './utils/tokens.module';
 import { MailModule } from './mail/mail.module';
 import { RepositoryModule } from './repository/repository.module';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
+
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true, // lets use process.env in the whole app
     }),
-    RepositoryModule,
     MongooseModule.forRoot('mongodb://localhost:27017/imagehub'),
-    TokensModule,
+    ThrottlerModule.forRoot({
+      throttlers: [
+        {
+          ttl: 10000,
+          limit: 20,
+        },
+      ],
+    }),
     MailerModule.forRoot({
       transport: {
         host: 'sandbox.smtp.mailtrap.io',
@@ -30,10 +39,18 @@ import { RepositoryModule } from './repository/repository.module';
         from: '"Twoja Apka" <no-reply@twoja-apka.pl>',
       },
     }),
+    RepositoryModule,
+    TokensModule,
     MailModule,
     JwtModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+  ],
 })
 export class AppModule {}
