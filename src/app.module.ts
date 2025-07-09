@@ -11,6 +11,7 @@ import { RepositoryModule } from './repository/repository.module';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 import { HashService } from './hash.service';
+import { PublicationModule } from './publication/publication.module';
 
 @Module({
   imports: [
@@ -40,6 +41,7 @@ import { HashService } from './hash.service';
         from: '"Twoja Apka" <no-reply@twoja-apka.pl>',
       },
     }),
+    PublicationModule,
     RepositoryModule,
     TokensModule,
     MailModule,
