@@ -9,19 +9,19 @@ export class RepositoryService {
   async insertOne({
     email,
     password,
-    verificationToken,
-    verificationTokenExpires,
+    // verificationToken,
+    // verificationTokenExpires,
   }: {
     email: string;
     password: string;
-    verificationToken: string;
-    verificationTokenExpires: number;
+    // verificationToken: string;
+    // verificationTokenExpires: number;
   }): Promise<void> {
     await this.userModel.create({
       email,
       password,
-      verificationToken,
-      verificationTokenExpires,
+      // verificationToken,
+      // verificationTokenExpires,
     });
   }
 

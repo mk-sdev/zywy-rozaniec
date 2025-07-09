@@ -66,46 +66,50 @@ export class MailService {
 
   async register(email: string, password: string): Promise<void> {
     const existingUser = await this.repositoryService.findOneByEmail(email);
-    if (existingUser && existingUser.isVerified) {
+    if (
+      existingUser
+      // && existingUser.isVerified
+    ) {
       // do not do anything to not to reveal the account exists in the db
       // throw new ConflictException('Email already in use');
       return;
     }
 
     const hashedPassword = await this.hashService.hash(password); // 10 salt rounds
-    const verificationToken = randomUUID();
-    const verificationTokenExpires = Date.now() + account_verification_lifespan;
+    // const verificationToken = randomUUID();
+    // const verificationTokenExpires = Date.now() + account_verification_lifespan;
 
-    if (existingUser && !existingUser.isVerified)
-      // set new verification token and its expiration date
-      await this.repositoryService.setNewVerificationToken(
-        email,
-        hashedPassword, // in case if the user gave different password than for the first time
-        verificationToken,
-        verificationTokenExpires,
-      );
-    else
-      // Add the user to the db
-      await this.repositoryService.insertOne({
-        email,
-        password: hashedPassword,
-        verificationToken,
-        verificationTokenExpires,
-      });
-
-    await this.sendMailWithToken(
+    // if (existingUser && !existingUser.isVerified)
+    //   // set new verification token and its expiration date
+    //   await this.repositoryService.setNewVerificationToken(
+    //     email,
+    //     hashedPassword, // in case if the user gave different password than for the first time
+    //     verificationToken,
+    //     verificationTokenExpires,
+    //   );
+    // else
+    // Add the user to the db
+    await this.repositoryService.insertOne({
       email,
-      verificationToken,
-      'Activate your account',
-      'verify you account',
-      undefined,
-      URL,
-      'token',
-      '/verify-account',
-    );
+      password: hashedPassword,
+      // verificationToken,
+      // verificationTokenExpires,
+    });
+
+    // await this.sendMailWithToken(
+    //   email,
+    //   verificationToken,
+    //   'Activate your account',
+    //   'verify you account',
+    //   undefined,
+    //   URL,
+    //   'token',
+    //   '/verify-account',
+    // );
   }
 
   // verifies a registration token
+  // ! not needed
   async verifyToken(token: string): Promise<void> {
     // TODO: add a cron job for removing unverified users
     const user = await this.repositoryService.findOneByVerificationToken(token);
@@ -113,9 +117,9 @@ export class MailService {
       throw new BadRequestException('Invalid token');
     }
 
-    if (user.verificationTokenExpires! < Date.now()) {
-      throw new BadRequestException('The token has expired');
-    }
+    // if (user.verificationTokenExpires! < Date.now()) {
+    //   throw new BadRequestException('The token has expired');
+    // }
 
     await this.repositoryService.verifyAccount(user._id as string);
   }

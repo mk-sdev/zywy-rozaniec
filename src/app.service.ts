@@ -30,9 +30,9 @@ export class AppService {
       throw new UnauthorizedException();
     }
 
-    if (!user.isVerified) {
-      throw new UnauthorizedException('Nie zweryfikowano konta');
-    }
+    // if (!user.isVerified) {
+    //   throw new UnauthorizedException('Nie zweryfikowano konta');
+    // }
     //* check if the password matches
     const isPasswordValid: boolean = await this.hashService.verify(
       user.password,
@@ -61,9 +61,9 @@ export class AppService {
 
     await this.repositoryService.trimRefreshTokens(String(user._id), 5);
 
-    if (user.isDeletionPending) {
-      await this.repositoryService.cancelScheduledDeletion(user._id as string);
-    }
+    // if (user.isDeletionPending) {
+    //   await this.repositoryService.cancelScheduledDeletion(user._id as string);
+    // }
 
     return {
       access_token,

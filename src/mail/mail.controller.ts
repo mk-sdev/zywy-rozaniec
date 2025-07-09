@@ -33,10 +33,11 @@ export class MailController {
 
   @Post('register')
   @HttpCode(HttpStatus.CREATED)
+  @UseGuards(JwtGuard)
   async register(@Body() registerDto: RegisterDto) {
-    const message = 'Verification link has been sent to your email address';
+    // const message = 'Verification link has been sent to your email address';
     await this.mailService.register(registerDto.email, registerDto.password);
-    return { message };
+    // return { message };
   }
 
   @Get('verify-account')

@@ -24,14 +24,14 @@ export class User {
 
   // * for the registration
 
-  @Prop({ default: false })
-  isVerified: boolean;
+  // @Prop({ default: false })
+  // isVerified: boolean;
 
-  @Prop({ index: true, sparse: true })
-  verificationToken?: string;
+  // @Prop({ index: true, sparse: true })
+  // verificationToken?: string;
 
-  @Prop()
-  verificationTokenExpires?: number;
+  // @Prop()
+  // verificationTokenExpires?: number;
 
   // * for email change
 
@@ -54,11 +54,11 @@ export class User {
 
   // * for account deletion
 
-  @Prop({ type: Boolean })
-  isDeletionPending?: boolean;
+  // @Prop({ type: Boolean })
+  // isDeletionPending?: boolean;
 
-  @Prop()
-  deletionScheduledAt?: number;
+  // @Prop()
+  // deletionScheduledAt?: number;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
