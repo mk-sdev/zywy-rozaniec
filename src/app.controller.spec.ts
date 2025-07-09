@@ -34,7 +34,7 @@ describe('AppController (integration)', () => {
     });
 
     const invalidDtos = [
-      // ❌ INVALID EMAILS
+      // INVALID EMAILS
       { email: '', password: 'Valid1@Pass' }, // empty email
       { email: '   ', password: 'Valid1@Pass' }, // email only spaces
       { email: null, password: 'Valid1@Pass' }, // null email
@@ -48,7 +48,7 @@ describe('AppController (integration)', () => {
       { email: 'email@@gmail.com', password: 'Valid1@Pass' }, // double @
       { email: 'a'.repeat(320) + '@example.com', password: 'Valid1@Pass' }, // excessively long email
 
-      // ❌ INVALID PASSWORDS
+      // INVALID PASSWORDS
       { email: 'email@gmail.com', password: '' }, // empty password
       { email: 'email@gmail.com', password: '        ' }, // only spaces
       { email: 'email@gmail.com', password: null }, // null password

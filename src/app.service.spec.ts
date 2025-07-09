@@ -2,7 +2,8 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { AppService } from './app.service';
 import { RepositoryService } from './repository/repository.service';
 import { MailService } from './mail/mail.service';
-import * as bcrypt from 'bcrypt';
+import * as argon2 from 'argon2';
+import { JwtPayload } from './utils/interfaces';
 
 describe('AppService', () => {
   let appService: AppService;
@@ -57,24 +58,42 @@ describe('AppService', () => {
 
   describe('logout', () => {
     it('should remove refresh token on logout', async () => {
-      const mockPayload = { sub: 'userId' };
+      const mockPayload: JwtPayload = {
+        sub: 'userId',
+        iat: 1234567890,
+        exp: 1234567890,
+      };
+      const plainToken = 'some-refresh-token';
+      const hashedToken = 'hashed-version-of-token';
 
-      // Mock verifyAsync
+      // mock verifyAsync, so that it returns payload with userId
       mockJwtRefreshService.verifyAsync = jest
         .fn()
         .mockResolvedValue(mockPayload);
 
-      // Mock removeRefreshToken
+      // mock findOne, so that it returns a user with the hashed token
+      mockUserRepo.findOne = jest.fn().mockResolvedValue({
+        refreshTokens: [hashedToken],
+      });
+
+      // mock argon2.verify, so that it returns true (token is valid)
+      jest.spyOn(argon2, 'verify').mockResolvedValue(true);
+
+      // mock removeRefreshToken
       mockUserRepo.removeRefreshToken = jest.fn().mockResolvedValue(undefined);
 
-      await appService.logout('some-refresh-token');
+      // call the function
+      await appService.logout(plainToken);
 
+      // Sprawdź wywołania
       expect(mockJwtRefreshService.verifyAsync).toHaveBeenCalledWith(
-        'some-refresh-token',
+        plainToken,
       );
+      expect(mockUserRepo.findOne).toHaveBeenCalledWith('userId');
+      expect(argon2.verify).toHaveBeenCalledWith(hashedToken, plainToken);
       expect(mockUserRepo.removeRefreshToken).toHaveBeenCalledWith(
         'userId',
-        'some-refresh-token',
+        hashedToken,
       );
     });
 
@@ -83,7 +102,7 @@ describe('AppService', () => {
         .spyOn(console, 'warn')
         .mockImplementation(() => {});
 
-      // Token nie da się zdekodować
+      // the token cannot be decoded
       mockJwtRefreshService.verifyAsync = jest
         .fn()
         .mockRejectedValue(new Error('Invalid token'));
@@ -95,7 +114,7 @@ describe('AppService', () => {
         'Invalid token',
       );
 
-      consoleWarnSpy.mockRestore(); // Przywrócenie domyślnego zachowania console.warn
+      consoleWarnSpy.mockRestore(); // return the default behavior of console.warn
     });
   });
 
@@ -122,7 +141,7 @@ describe('AppService', () => {
         save: jest.fn(),
       });
 
-      jest.spyOn(bcrypt, 'compare').mockResolvedValue(false);
+      jest.spyOn(argon2, 'verify').mockResolvedValue(false);
 
       await expect(
         appService.changePassword('userId', 'wrongpassword', 'newpassword'),
@@ -138,8 +157,8 @@ describe('AppService', () => {
       };
 
       mockUserRepo.findOne.mockResolvedValue(userMock);
-      jest.spyOn(bcrypt, 'compare').mockResolvedValue(true);
-      jest.spyOn(bcrypt, 'hash').mockResolvedValue('newHashedPassword');
+      jest.spyOn(argon2, 'verify').mockResolvedValue(true);
+      jest.spyOn(argon2, 'hash').mockResolvedValue('newHashedPassword');
       mockUserRepo.updatePasswordAndClearTokens = jest
         .fn()
         .mockResolvedValue(undefined);
@@ -168,7 +187,7 @@ describe('AppService', () => {
         password: 'hashedPassword',
       });
 
-      jest.spyOn(bcrypt, 'compare').mockResolvedValue(false);
+      jest.spyOn(argon2, 'verify').mockResolvedValue(false);
 
       await expect(
         appService.markForDeletion('userId', 'wrongpassword'),
@@ -183,7 +202,7 @@ describe('AppService', () => {
       };
 
       mockUserRepo.findOne.mockResolvedValue(userMock);
-      jest.spyOn(bcrypt, 'compare').mockResolvedValue(true);
+      jest.spyOn(argon2, 'verify').mockResolvedValue(true);
       mockUserRepo.markUserForDeletion = jest.fn().mockResolvedValue(undefined);
 
       const before = Date.now();
@@ -194,7 +213,7 @@ describe('AppService', () => {
       const callArgs = mockUserRepo.markUserForDeletion.mock.calls[0];
       expect(callArgs[0]).toEqual(userMock.email);
 
-      // deletionScheduledAt jest timestampem - sprawdź, czy jest w oczekiwanym zakresie
+      // deletionScheduledAt is a timestamp - check if it is within the expected range
       expect(callArgs[1]).toBeGreaterThan(before + 1000 * 60 * 60 * 24 * 13);
       expect(callArgs[1]).toBeLessThan(before + 1000 * 60 * 60 * 24 * 15);
     });

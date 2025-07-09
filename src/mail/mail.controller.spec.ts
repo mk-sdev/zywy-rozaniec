@@ -1,11 +1,10 @@
 import { ValidationPipe } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
-import { MailController } from './mail.controller';
-import { MailService } from './mail.service';
-import { ChangePasswordDto } from '../dtos/changePassword.dto';
-import { JwtGuard } from '../jwt.guard';
 import { ChangeEmailDto } from '../dtos/changeEmail.dto';
 import { EmailDto } from '../dtos/email.dto';
+import { JwtGuard } from '../jwt.guard';
+import { MailController } from './mail.controller';
+import { MailService } from './mail.service';
 
 describe('MailController (integration)', () => {
   let controller: MailController;
@@ -69,7 +68,7 @@ describe('MailController (integration)', () => {
     });
 
     const invalidDtos = [
-      // 🔴 Invalid email formats
+      // Invalid email formats
       { newEmail: '', password: 'Valid1@Pass' }, // empty email
       { newEmail: 'invalidemail', password: 'Valid1@Pass' }, // missing @ and domain
       { newEmail: 'email@', password: 'Valid1@Pass' }, // missing domain
@@ -79,7 +78,7 @@ describe('MailController (integration)', () => {
       { newEmail: 12345, password: 'Valid1@Pass' }, // wrong type (number)
       { password: 'Valid1@Pass' }, // missing email
 
-      // 🔴 Invalid passwords
+      // Invalid passwords
       { newEmail: 'email@example.com', password: '' }, // empty password
       { newEmail: 'email@example.com', password: null }, // null password
       { newEmail: 'email@example.com', password: {} }, // invalid type (object)
