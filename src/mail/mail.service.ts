@@ -96,7 +96,7 @@ export class MailService {
       email,
       verificationToken,
       'Activate your account',
-      'verify you account', // no template
+      'verify you account',
       undefined,
       URL,
       'token',
@@ -116,7 +116,7 @@ export class MailService {
       throw new BadRequestException('The token has expired');
     }
 
-    await this.repositoryService.verifyAccount(String(user._id));
+    await this.repositoryService.verifyAccount(user._id as string);
   }
 
   async changeEmail(id: string, newEmail: string, password: string) {

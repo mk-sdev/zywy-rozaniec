@@ -11,11 +11,11 @@ export class RepositoryService {
     return created.save();
   }
 
-  async findOne(id: string) {
+  async findOne(id: string): Promise<UserDocument | null> {
     return this.userModel.findOne({ _id: id });
   }
 
-  async findOneByEmail(email: string) {
+  async findOneByEmail(email: string): Promise<UserDocument | null> {
     return this.userModel.findOne({ email });
   }
 
@@ -126,7 +126,10 @@ export class RepositoryService {
     );
   }
 
-  async setNewPasswordFromResetToken(token: string, newPassword: string) {
+  async setNewPasswordFromResetToken(
+    token: string,
+    newPassword: string,
+  ): Promise<void> {
     await this.userModel.updateOne(
       { passwordResetToken: token },
       {
@@ -210,7 +213,7 @@ export class RepositoryService {
     email: string,
     resetToken: string,
     passwordResetTokenExpires: number,
-  ) {
+  ): Promise<void> {
     await this.userModel.updateOne(
       { email },
       {
