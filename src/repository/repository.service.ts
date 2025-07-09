@@ -6,9 +6,23 @@ import { UserDocument } from './user.schema';
 export class RepositoryService {
   constructor(@InjectModel('User') private userModel: Model<UserDocument>) {}
 
-  async insertOne({ email, password }: { email: string; password: string }) {
-    const created = new this.userModel({ email, password });
-    return created.save();
+  async insertOne({
+    email,
+    password,
+    verificationToken,
+    verificationTokenExpires,
+  }: {
+    email: string;
+    password: string;
+    verificationToken: string;
+    verificationTokenExpires: number;
+  }): Promise<void> {
+    await this.userModel.create({
+      email,
+      password,
+      verificationToken,
+      verificationTokenExpires,
+    });
   }
 
   async findOne(id: string): Promise<UserDocument | null> {
@@ -36,7 +50,6 @@ export class RepositoryService {
   }
 
   async addRefreshToken(id: string, token: string): Promise<void> {
-    console.log('🚀 ~ RepositoryService ~ addRefreshToken ~ token:', token);
     await this.userModel.updateOne(
       { _id: id },
       { $push: { refreshTokens: token } },
@@ -83,15 +96,17 @@ export class RepositoryService {
     );
   }
 
-  async setVerificationToken(
-    userId: string,
+  async setNewVerificationToken(
+    email: string,
+    password: string,
     token: string,
     expiresAt: number,
   ): Promise<void> {
     await this.userModel.updateOne(
-      { _id: userId },
+      { email },
       {
         $set: {
+          password,
           verificationToken: token,
           verificationTokenExpires: expiresAt,
         },

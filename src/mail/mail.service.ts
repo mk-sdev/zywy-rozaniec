@@ -66,33 +66,32 @@ export class MailService {
 
   async register(email: string, password: string): Promise<void> {
     const existingUser = await this.repositoryService.findOneByEmail(email);
-    if (existingUser) {
+    if (existingUser && existingUser.isVerified) {
       // do not do anything to not to reveal the account exists in the db
       // throw new ConflictException('Email already in use');
+      return;
     }
 
     const hashedPassword = await this.hashService.hash(password); // 10 salt rounds
-
-    // Dodaj użytkownika do bazy
-    await this.repositoryService.insertOne({
-      email,
-      password: hashedPassword,
-    });
-
-    const newUser = await this.repositoryService.findOneByEmail(email);
-    if (!newUser) {
-      throw new InternalServerErrorException('User creation failed');
-    }
-
     const verificationToken = randomUUID();
-    const tokenExpiresAt = Date.now() + account_verification_lifespan;
+    const verificationTokenExpires = Date.now() + account_verification_lifespan;
 
-    // Przenieś zapis tokenu do repo
-    await this.repositoryService.setVerificationToken(
-      newUser._id as string,
-      verificationToken,
-      tokenExpiresAt,
-    );
+    if (existingUser && !existingUser.isVerified)
+      // set new verification token and its expiration date
+      await this.repositoryService.setNewVerificationToken(
+        email,
+        hashedPassword, // in case if the user gave different password than for the first time
+        verificationToken,
+        verificationTokenExpires,
+      );
+    else
+      // Add the user to the db
+      await this.repositoryService.insertOne({
+        email,
+        password: hashedPassword,
+        verificationToken,
+        verificationTokenExpires,
+      });
 
     await this.sendMailWithToken(
       email,
