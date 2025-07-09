@@ -103,9 +103,9 @@ export class RepositoryService {
     await this.userModel.updateOne(
       { _id: userId },
       {
-        $set: {
-          isDeletionPending: false,
-          deletionScheduledAt: undefined,
+        $unset: {
+          isDeletionPending: '',
+          deletionScheduledAt: '',
         },
       },
     );
@@ -196,9 +196,11 @@ export class RepositoryService {
       {
         $set: {
           email: newEmail,
-          pendingEmail: null,
-          emailChangeToken: null,
-          emailChangeTokenExpires: null,
+        },
+        $unset: {
+          pendingEmail: '',
+          emailChangeToken: '',
+          emailChangeTokenExpires: '',
         },
       },
     );

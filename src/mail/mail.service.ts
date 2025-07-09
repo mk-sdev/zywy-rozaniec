@@ -28,7 +28,7 @@ export class MailService {
     toEmail: string,
     token: string,
     subject: string,
-    template?: string,
+    purpose: string,
     contextData?: Record<string, unknown>,
     baseUrl: string = 'http://localhost:3000',
     tokenQueryParamName: string = 'token',
@@ -40,20 +40,25 @@ export class MailService {
     const context = contextData
       ? { ...contextData, confirmationLink }
       : { confirmationLink };
-
+    console.log(
+      `
+        <h3>Welcome!</h3>
+        <p>Click the link below in order to ${purpose}:</p>
+        <a href="${confirmationLink}">${confirmationLink}</a>
+        <p>If that's not you, ignore this message.</p>
+      `,
+    );
     await this.mailerService.sendMail({
       to: toEmail,
       subject,
-      template,
+      template: undefined,
       context,
-      html: !template
-        ? `
+      html: `
           <h3>Welcome!</h3>
           <p>Click the link below:</p>
           <a href="${confirmationLink}">${confirmationLink}</a>
           <p>If that's not you, ignore this message.</p>
-        `
-        : undefined,
+        `,
     });
   }
 
@@ -90,8 +95,8 @@ export class MailService {
     await this.sendMailWithToken(
       email,
       verificationToken,
-      'Aktywuj swoje konto',
-      undefined, // no template
+      'Activate your account',
+      'verify you account', // no template
       undefined,
       URL,
       'token',
@@ -101,6 +106,7 @@ export class MailService {
 
   // verifies a registration token
   async verifyToken(token: string): Promise<void> {
+    // TODO: add a cron job for removing unverified users
     const user = await this.repositoryService.findOneByVerificationToken(token);
     if (!user) {
       throw new BadRequestException('Invalid token');
@@ -148,7 +154,7 @@ export class MailService {
       newEmail,
       verificationToken,
       'Confirm email address change',
-      'email-change-confirmation',
+      'confirm email change',
       {},
       URL,
       'token',
@@ -157,6 +163,7 @@ export class MailService {
   }
 
   async verifyEmail(token: string): Promise<void> {
+    // TODO: add a cron job for removing unverified emails
     const user = await this.repositoryService.findOneByEmailToken(token);
 
     if (!user) {
@@ -198,8 +205,8 @@ export class MailService {
     await this.sendMailWithToken(
       email,
       resetToken,
-      'Reset hasła',
-      'password-reset',
+      'Password reset instruction',
+      'reset your password',
       {},
       FRONTEND_URL,
       'token',

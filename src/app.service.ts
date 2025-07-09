@@ -170,6 +170,7 @@ export class AppService {
   }
 
   async markForDeletion(id: string, password: string) {
+    // TODO: add a cron job for deleting accounts after the deletionScheduledAt time
     const user = await this.repositoryService.findOne(id);
     if (!user) {
       throw new ConflictException('The user of the given email doesn`t exist');

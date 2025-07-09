@@ -5,23 +5,20 @@ import {
   Get,
   HttpCode,
   HttpStatus,
-  NotFoundException,
   Patch,
   Post,
   Query,
-  Res,
   UseGuards,
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
 import { ChangeEmailDto } from '../dtos/changeEmail.dto';
 import { EmailDto } from '../dtos/email.dto';
+import { RegisterDto } from '../dtos/register.dto';
+import { ResetPasswordDto } from '../dtos/resetPassword.dto';
 import { Id } from '../id.decorator';
 import { JwtGuard } from '../jwt.guard';
 import { MailService } from './mail.service';
-import { RegisterDto } from '../dtos/register.dto';
-import { ResetPasswordDto } from '../dtos/resetPassword.dto';
-import { Response } from 'express';
 
 // * this controller handles mailing-related endpoints
 @Controller()
@@ -60,7 +57,7 @@ export class MailController {
     return { message: 'Email address has been changed successfully' };
   }
 
-  @Patch('verify-email')
+  @Get('verify-email')
   async confirmEmailChange(@Query('token') token: string) {
     if (!token) {
       throw new BadRequestException('Verification token is required');
