@@ -7,7 +7,6 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import * as argon2 from 'argon2';
 import { randomUUID } from 'crypto';
 import {
   account_verification_lifespan,
@@ -17,11 +16,14 @@ import {
   URL,
 } from '../utils/constants';
 import { RepositoryService } from '../repository/repository.service';
+import { HashService } from '../hash.service';
+
 @Injectable()
 export class MailService {
   constructor(
     private repositoryService: RepositoryService,
     private readonly mailerService: MailerService,
+    private readonly hashService: HashService,
   ) {}
 
   async sendMailWithToken(
@@ -69,7 +71,7 @@ export class MailService {
       // throw new ConflictException('Email already in use');
     }
 
-    const hashedPassword = await argon2.hash(password); // 10 salt rounds
+    const hashedPassword = await this.hashService.hash(password); // 10 salt rounds
 
     // Dodaj użytkownika do bazy
     await this.repositoryService.insertOne({
@@ -127,7 +129,7 @@ export class MailService {
       );
     }
 
-    const isPasswordValid: boolean = await argon2.verify(
+    const isPasswordValid: boolean = await this.hashService.verify(
       user.password,
       password,
     );
@@ -223,7 +225,7 @@ export class MailService {
       user.passwordResetTokenExpires < Date.now()
     )
       throw new UnauthorizedException('Token expired');
-    const password: string = await argon2.hash(newPassword);
+    const password: string = await this.hashService.hash(newPassword);
     await this.repositoryService.setNewPasswordFromResetToken(token, password);
 
     return {

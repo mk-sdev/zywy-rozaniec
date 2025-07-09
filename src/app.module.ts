@@ -10,6 +10,7 @@ import { MailModule } from './mail/mail.module';
 import { RepositoryModule } from './repository/repository.module';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
+import { HashService } from './hash.service';
 
 @Module({
   imports: [
@@ -46,6 +47,7 @@ import { APP_GUARD } from '@nestjs/core';
   ],
   controllers: [AppController],
   providers: [
+    HashService,
     AppService,
     {
       provide: APP_GUARD,

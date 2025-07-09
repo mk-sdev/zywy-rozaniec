@@ -5,10 +5,10 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import * as argon2 from 'argon2';
 import { RepositoryService } from './repository/repository.service';
 import { account_deletion_lifespan } from './utils/constants';
 import { JwtPayload } from './utils/interfaces';
+import { HashService } from './hash.service';
 
 @Injectable()
 export class AppService {
@@ -18,6 +18,7 @@ export class AppService {
     private readonly accessTokenService: JwtService,
     @Inject('JWT_REFRESH_SERVICE')
     private readonly refreshTokenService: JwtService,
+    private readonly hashService: HashService,
   ) {}
 
   async login(
@@ -33,7 +34,7 @@ export class AppService {
       throw new UnauthorizedException('Nie zweryfikowano konta');
     }
     //* check if the password matches
-    const isPasswordValid: boolean = await argon2.verify(
+    const isPasswordValid: boolean = await this.hashService.verify(
       user.password,
       password,
     );
@@ -49,7 +50,8 @@ export class AppService {
     const access_token = await this.accessTokenService.signAsync(payload);
     const refresh_token = await this.refreshTokenService.signAsync(payload);
 
-    const hashedRefreshToken: string = await argon2.hash(refresh_token);
+    const hashedRefreshToken: string =
+      await this.hashService.hash(refresh_token);
 
     //* save refresh token to the db
     await this.repositoryService.addRefreshToken(
@@ -79,8 +81,11 @@ export class AppService {
       //iterate over its refreshTokens
       if (!user) throw new UnauthorizedException('Invalid refresh token');
       for (const hashedToken of user.refreshTokens) {
-        //compare via argon2.verify
-        const isMatch = await argon2.verify(hashedToken, refresh_token);
+        //compare via this.hashService.verify
+        const isMatch = await this.hashService.verify(
+          hashedToken,
+          refresh_token,
+        );
         if (isMatch) {
           //removed the token from the db
           await this.repositoryService.removeRefreshToken(
@@ -112,12 +117,16 @@ export class AppService {
       const newRefreshToken =
         await this.refreshTokenService.signAsync(newPayload);
 
-      const newHashedRefreshToken = await argon2.hash(newRefreshToken);
+      const newHashedRefreshToken =
+        await this.hashService.hash(newRefreshToken);
 
       let validTokenFound = false;
 
       for (const hashedToken of user.refreshTokens) {
-        const isMatch = await argon2.verify(hashedToken, refresh_token);
+        const isMatch = await this.hashService.verify(
+          hashedToken,
+          refresh_token,
+        );
         if (isMatch) {
           validTokenFound = true;
           await this.repositoryService.replaceRefreshToken(
@@ -157,12 +166,15 @@ export class AppService {
       throw new ConflictException('The user of the given email doesn`t exist');
     }
 
-    const isPasswordValid = await argon2.verify(user.password, currentPassword);
+    const isPasswordValid = await this.hashService.verify(
+      user.password,
+      currentPassword,
+    );
     if (!isPasswordValid) {
       throw new UnauthorizedException('Current password is incorrect');
     }
 
-    const hashedNewPassword = await argon2.hash(newPassword);
+    const hashedNewPassword = await this.hashService.hash(newPassword);
     await this.repositoryService.updatePasswordAndClearTokens(
       user.email,
       hashedNewPassword,
@@ -176,7 +188,10 @@ export class AppService {
       throw new ConflictException('The user of the given email doesn`t exist');
     }
 
-    const isPasswordValid = await argon2.verify(user.password, password);
+    const isPasswordValid = await this.hashService.verify(
+      user.password,
+      password,
+    );
     if (!isPasswordValid) {
       throw new UnauthorizedException('Current password is incorrect');
     }
