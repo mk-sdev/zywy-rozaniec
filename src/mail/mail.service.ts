@@ -29,7 +29,7 @@ export class MailService {
     token: string,
     subject: string,
     template?: string,
-    contextData?: Record<string, any>,
+    contextData?: Record<string, unknown>,
     baseUrl: string = 'http://localhost:3000',
     tokenQueryParamName: string = 'token',
     path?: string,
