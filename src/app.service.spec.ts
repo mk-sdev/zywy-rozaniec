@@ -2,8 +2,8 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { AppService } from './app.service';
 import { RepositoryService } from './repository/repository.service';
 import { MailService } from './mail/mail.service';
-import * as argon2 from 'argon2';
 import { JwtPayload } from './utils/interfaces';
+import { HashService } from './hash.service';
 
 describe('AppService', () => {
   let appService: AppService;
@@ -26,6 +26,11 @@ describe('AppService', () => {
     sendPasswordChangedEmail: jest.fn(),
   };
 
+  const hashService = {
+    verify: jest.fn(),
+    hash: jest.fn(),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -45,6 +50,10 @@ describe('AppService', () => {
         {
           provide: MailService,
           useValue: mockMailService,
+        },
+        {
+          provide: HashService,
+          useValue: hashService,
         },
       ],
     }).compile();
@@ -76,8 +85,8 @@ describe('AppService', () => {
         refreshTokens: [hashedToken],
       });
 
-      // mock argon2.verify, so that it returns true (token is valid)
-      jest.spyOn(argon2, 'verify').mockResolvedValue(true);
+      // mock hashService.verify, so that it returns true (token is valid)
+      jest.spyOn(hashService, 'verify').mockResolvedValue(true);
 
       // mock removeRefreshToken
       mockUserRepo.removeRefreshToken = jest.fn().mockResolvedValue(undefined);
@@ -90,7 +99,7 @@ describe('AppService', () => {
         plainToken,
       );
       expect(mockUserRepo.findOne).toHaveBeenCalledWith('userId');
-      expect(argon2.verify).toHaveBeenCalledWith(hashedToken, plainToken);
+      expect(hashService.verify).toHaveBeenCalledWith(hashedToken, plainToken);
       expect(mockUserRepo.removeRefreshToken).toHaveBeenCalledWith(
         'userId',
         hashedToken,
@@ -141,7 +150,7 @@ describe('AppService', () => {
         save: jest.fn(),
       });
 
-      jest.spyOn(argon2, 'verify').mockResolvedValue(false);
+      jest.spyOn(hashService, 'verify').mockResolvedValue(false);
 
       await expect(
         appService.changePassword('userId', 'wrongpassword', 'newpassword'),
@@ -157,8 +166,8 @@ describe('AppService', () => {
       };
 
       mockUserRepo.findOne.mockResolvedValue(userMock);
-      jest.spyOn(argon2, 'verify').mockResolvedValue(true);
-      jest.spyOn(argon2, 'hash').mockResolvedValue('newHashedPassword');
+      jest.spyOn(hashService, 'verify').mockResolvedValue(true);
+      jest.spyOn(hashService, 'hash').mockResolvedValue('newHashedPassword');
       mockUserRepo.updatePasswordAndClearTokens = jest
         .fn()
         .mockResolvedValue(undefined);
@@ -187,7 +196,7 @@ describe('AppService', () => {
         password: 'hashedPassword',
       });
 
-      jest.spyOn(argon2, 'verify').mockResolvedValue(false);
+      jest.spyOn(hashService, 'verify').mockResolvedValue(false);
 
       await expect(
         appService.markForDeletion('userId', 'wrongpassword'),
@@ -202,7 +211,7 @@ describe('AppService', () => {
       };
 
       mockUserRepo.findOne.mockResolvedValue(userMock);
-      jest.spyOn(argon2, 'verify').mockResolvedValue(true);
+      jest.spyOn(hashService, 'verify').mockResolvedValue(true);
       mockUserRepo.markUserForDeletion = jest.fn().mockResolvedValue(undefined);
 
       const before = Date.now();
