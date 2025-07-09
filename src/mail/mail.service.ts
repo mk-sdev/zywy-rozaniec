@@ -14,9 +14,9 @@ import {
   email_change_lifespan,
   FRONTEND_URL,
   password_reset_lifespan,
-} from 'src/utils/constants';
+  URL,
+} from '../utils/constants';
 import { RepositoryService } from '../repository/repository.service';
-import { URL } from 'src/utils/constants';
 @Injectable()
 export class MailService {
   constructor(

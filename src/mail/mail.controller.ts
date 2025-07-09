@@ -19,8 +19,8 @@ import { EmailDto } from '../dtos/email.dto';
 import { Id } from '../id.decorator';
 import { JwtGuard } from '../jwt.guard';
 import { MailService } from './mail.service';
-import { RegisterDto } from 'src/dtos/register.dto';
-import { ResetPasswordDto } from 'src/dtos/resetPassword.dto';
+import { RegisterDto } from '../dtos/register.dto';
+import { ResetPasswordDto } from '../dtos/resetPassword.dto';
 import { Response } from 'express';
 
 // * this controller handles mailing-related endpoints
