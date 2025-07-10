@@ -1,7 +1,13 @@
-import { Controller, Get, Param } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import { JwtGuard } from 'src/jwt.guard';
+import { PublicationRepositoryService } from '../repository/publicationRepository.service';
+import { Publication } from 'src/repository/publication.schema';
 
 @Controller('dzien')
 export class PublicationController {
+  constructor(
+    private readonly publicationRepositoryService: PublicationRepositoryService,
+  ) {}
   @Get(':day')
   getPublication(@Param('day') day: string): object {
     return {
@@ -22,6 +28,18 @@ export class PublicationController {
           value: 'https://www.youtube.com/watch?v=jNQXAC9IVRw',
         },
       ],
+    };
+  }
+
+  @Post()
+  // @UseGuards(JwtGuard)
+  async createPublication(@Body() body: Publication): Promise<object> {
+    await this.publicationRepositoryService.insertOneOrUpdate({
+      day: body.day,
+      data: body.data,
+    });
+    return {
+      message: 'Publication created successfully',
     };
   }
 }
