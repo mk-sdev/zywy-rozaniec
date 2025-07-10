@@ -18,7 +18,7 @@ import { PublicationModule } from './publication/publication.module';
     ConfigModule.forRoot({
       isGlobal: true, // lets use process.env in the whole app
     }),
-    MongooseModule.forRoot('mongodb://localhost:27017/imagehub'),
+    MongooseModule.forRoot('mongodb://localhost:27017/rosary'),
     ThrottlerModule.forRoot({
       throttlers: [
         {

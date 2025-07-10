@@ -7,6 +7,7 @@ import {
   HttpCode,
   HttpStatus,
   Patch,
+  Req,
   Res,
   UnauthorizedException,
   UseGuards,
@@ -19,6 +20,8 @@ import { ChangePasswordDto } from './dtos/changePassword.dto';
 import { LoginDto } from './dtos/login.dto';
 import { Id } from './id.decorator';
 import { JwtGuard } from './jwt.guard';
+import { accessTokenOptions, refreshTokenOptions } from './utils/constants';
+import { UserRequest } from './utils/interfaces';
 @Controller()
 @UsePipes(
   new ValidationPipe({
@@ -45,34 +48,50 @@ export class AppController {
       loginDto.password,
     );
 
-    response.setHeader('Authorization', `Bearer ${access_token}`);
-    // response.setHeader('X-Refresh-Token', refresh_token);
+    response.cookie('access_token', access_token, accessTokenOptions);
+    response.cookie('refresh_token', refresh_token, refreshTokenOptions);
 
-    return { message: 'Login successful', refresh_token };
+    return { message: 'Login successful' };
   }
 
   @Patch('logout')
   @HttpCode(HttpStatus.OK)
-  async logout(@Body() body: { refresh_token: string }) {
-    const { refresh_token } = body;
+  async logout(
+    @Req() req: UserRequest,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const refresh_token = req.cookies?.refresh_token;
+
+    if (!refresh_token) {
+      throw new UnauthorizedException('No refresh token provided');
+    }
+
     await this.appService.logout(refresh_token);
+
+    res.clearCookie('access_token', accessTokenOptions);
+    res.clearCookie('refresh_token', refreshTokenOptions);
+
     return { message: 'Logout successful' };
   }
 
   @Patch('refresh')
   @HttpCode(HttpStatus.OK)
-  async refresh(@Body() body: { refresh_token: string }) {
-    const { refresh_token } = body;
-    const refreshed = await this.appService.refreshTokens(
-      // access_token,
-      refresh_token,
-    );
+  async refresh(
+    @Req() req: UserRequest,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const refresh_token = req.cookies?.refresh_token;
 
-    return {
-      message: 'Refresh successful',
-      access_token: refreshed.access_token,
-      refresh_token: refreshed.refresh_token,
-    };
+    if (!refresh_token) {
+      throw new UnauthorizedException('No refresh token provided');
+    }
+
+    const refreshed = await this.appService.refreshTokens(refresh_token);
+
+    res.cookie('access_token', refreshed.access_token, accessTokenOptions);
+    res.cookie('refresh_token', refreshed.refresh_token, refreshTokenOptions);
+
+    return { message: 'Refresh successful' };
   }
 
   @Patch('change-password')
@@ -88,31 +107,13 @@ export class AppController {
     await this.appService.markForDeletion(id, body.password);
   }
 
-  //* dev
   @Get('userinfo')
+  @UseGuards(JwtGuard)
   getUserInfo(@Headers('authorization') authHeader: string) {
-    // Check if there is a header and whether it is in the "bearer token" format
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      throw new UnauthorizedException(
-        'Missing or invalid Authorization header',
-      );
-    }
-
-    const token = authHeader.split(' ')[1];
-    if (
-      !token ||
-      token === 'null' ||
-      token === 'undefined' ||
-      token.trim() === ''
-    ) {
-      throw new UnauthorizedException('Missing or invalid token');
-    }
-
     return {
       id: 123,
       name: 'Jan Kowalski',
       email: 'jan.kowalski@example.com',
-      tokenReceived: token,
     };
   }
 }

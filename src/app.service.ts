@@ -29,7 +29,6 @@ export class AppService {
     if (!user) {
       throw new UnauthorizedException();
     }
-
     // if (!user.isVerified) {
     //   throw new UnauthorizedException('Nie zweryfikowano konta');
     // }
