@@ -11,7 +11,7 @@ export class PublicationController {
   @Get(':day')
   getPublication(@Param('day') day: string): object {
     return {
-      date: '2025-07-09',
+      day: '2025-07-09',
       data: [
         {
           type: 'Text',
