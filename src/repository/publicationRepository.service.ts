@@ -14,6 +14,10 @@ export class PublicationRepositoryService {
     return this.publicationModel.findOne({ day });
   }
 
+  async getAllPublications(): Promise<PublicationDocument[]> {
+    return this.publicationModel.find().exec();
+  }
+
   async insertOneOrUpdate(publication: {
     day: string;
     data: Array<{
