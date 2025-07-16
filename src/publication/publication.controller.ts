@@ -1,4 +1,15 @@
-import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  Param,
+  ParseIntPipe,
+  Post,
+  Put,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { JwtGuard } from 'src/jwt.guard';
 import { PublicationRepositoryService } from '../repository/publicationRepository.service';
 import { Publication } from '../repository/publication.schema';
@@ -15,22 +26,33 @@ export class PublicationController {
     return await this.publicationService.getAllPublications();
   }
 
-  @Get(':day')
-  getPublication(@Param('day') day: string): object {
-    const pub = this.publicationRepositoryService.getOneByDay(day);
+  @Get(':index')
+  getPublication(@Param('index', ParseIntPipe) index: number): object {
+    const pub = this.publicationRepositoryService.getOneByDay(index);
     console.log(pub);
     return pub;
   }
 
   @Post()
   // @UseGuards(JwtGuard)
-  async createPublication(@Body() body: Publication): Promise<object> {
-    await this.publicationRepositoryService.insertOneOrUpdate({
-      day: body.day,
-      data: body.data,
-    });
+  async createPublication(
+    @Query('index', ParseIntPipe) index: number,
+    @Body() body: Publication,
+  ): Promise<object> {
+    await this.publicationRepositoryService.insertOne(index, body.data);
     return {
       message: 'Publication created successfully',
+      created: true,
+    };
+  }
+
+  @Put()
+  // @UseGuards(JwtGuard)
+  async updatePublication(@Body() body: Publication): Promise<object> {
+    await this.publicationRepositoryService.updateOne(body.index, body.data);
+    return {
+      message: 'Publication updated successfully',
+      updated: true,
     };
   }
 }

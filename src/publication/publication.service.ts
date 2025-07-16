@@ -7,6 +7,6 @@ export class PublicationService {
   ) {}
   async getAllPublications(): Promise<Array<unknown>> {
     const publications = await this.publicationRepository.getAllPublications();
-    return publications.map((publication) => publication.day);
+    return publications.map((publication) => publication.index);
   }
 }

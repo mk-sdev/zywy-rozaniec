@@ -6,7 +6,7 @@ export type PublicationDocument = Publication & Document;
 @Schema()
 export class Publication {
   @Prop({ required: true, unique: true, index: true })
-  day: string;
+  index: number;
 
   @Prop([
     {

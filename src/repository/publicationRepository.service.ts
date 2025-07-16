@@ -10,28 +10,33 @@ export class PublicationRepositoryService {
     private publicationModel: Model<PublicationDocument>,
   ) {}
 
-  getOneByDay(day: string): Promise<PublicationDocument | null> {
-    return this.publicationModel.findOne({ day });
+  getOneByDay(index: number): Promise<PublicationDocument | null> {
+    return this.publicationModel.findOne({ index });
   }
 
   async getAllPublications(): Promise<PublicationDocument[]> {
     return this.publicationModel.find().exec();
   }
 
-  async insertOneOrUpdate(publication: {
-    day: string;
+  async insertOne(
+    index: number,
     data: Array<{
       type: string;
       value: string;
       options?: Record<string, unknown>;
-    }>;
-  }): Promise<PublicationDocument> {
-    return this.publicationModel
-      .findOneAndUpdate(
-        { day: publication.day },
-        { $set: publication },
-        { upsert: true, new: true }, // upsert = insert jeśli brak, new = zwróć nowy dokument
-      )
-      .exec();
+    }>,
+  ): Promise<void> {
+    await this.publicationModel.create({ index, data });
+  }
+
+  async updateOne(
+    index: number,
+    data: Array<{
+      type: string;
+      value: string;
+      options?: Record<string, unknown>;
+    }>,
+  ): Promise<void> {
+    await this.publicationModel.updateOne({ index }, { $set: { data } });
   }
 }

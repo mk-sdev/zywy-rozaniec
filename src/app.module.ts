@@ -19,7 +19,8 @@ import { PublicationModule } from './publication/publication.module';
       isGlobal: true, // lets use process.env in the whole app
     }),
     MongooseModule.forRoot(
-      process.env.MONGO_URI || 'mongodb://localhost:27017/rosary',
+      // process.env.MONGO_URI ||
+      'mongodb://localhost:27017/rosary',
     ),
     ThrottlerModule.forRoot({
       throttlers: [
