@@ -9,7 +9,7 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { JwtGuard } from 'src/jwt.guard';
+import { JwtGuard } from '../jwt.guard';
 import { Publication } from '../repository/publication.schema';
 import { PublicationRepositoryService } from '../repository/publicationRepository.service';
 import { PublicationService } from './publication.service';
