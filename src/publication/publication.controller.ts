@@ -2,7 +2,6 @@ import {
   Body,
   Controller,
   Get,
-  HttpCode,
   Param,
   ParseIntPipe,
   Post,
@@ -11,8 +10,8 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { JwtGuard } from 'src/jwt.guard';
-import { PublicationRepositoryService } from '../repository/publicationRepository.service';
 import { Publication } from '../repository/publication.schema';
+import { PublicationRepositoryService } from '../repository/publicationRepository.service';
 import { PublicationService } from './publication.service';
 
 @Controller('post')
@@ -34,7 +33,7 @@ export class PublicationController {
   }
 
   @Post()
-  // @UseGuards(JwtGuard)
+  @UseGuards(JwtGuard)
   async createPublication(
     @Query('index', ParseIntPipe) index: number,
     @Body() body: Publication,
@@ -47,7 +46,7 @@ export class PublicationController {
   }
 
   @Put()
-  // @UseGuards(JwtGuard)
+  @UseGuards(JwtGuard)
   async updatePublication(@Body() body: Publication): Promise<object> {
     await this.publicationRepositoryService.updateOne(body.index, body.data);
     return {

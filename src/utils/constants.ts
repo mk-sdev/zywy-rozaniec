@@ -4,20 +4,20 @@ export const accessTokenOptions: CookieOptions = {
   httpOnly: true,
   secure: false,
   sameSite: 'lax',
-  maxAge: 1000 * 10, // 10 seconds
+  maxAge: 1000 * 60 * 15, // 15 miutes
 };
 
 export const refreshTokenOptions: CookieOptions = {
   httpOnly: true,
   secure: false,
   sameSite: 'lax',
-  maxAge: 1000 * 60 * 60, // 90 seconds
+  maxAge: 1000 * 60 * 60 * 24 * 7, // 1 week
 };
 
 // access jwt lifespan
-export const access_jwt_lifespan = '10s';
+export const access_jwt_lifespan = '15m';
 // refresh jwt lifespan
-export const refresh_jwt_lifespan = '1h';
+export const refresh_jwt_lifespan = '7d';
 
 // token lifespan to confirm password change
 export const password_reset_lifespan = 1000 * 60 * 20; // 20 min

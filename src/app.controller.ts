@@ -107,13 +107,9 @@ export class AppController {
     await this.appService.markForDeletion(id, body.password);
   }
 
-  @Get('userinfo')
+  @Get('isLogged')
   @UseGuards(JwtGuard)
   getUserInfo(@Headers('authorization') authHeader: string) {
-    return {
-      id: 123,
-      name: 'Jan Kowalski',
-      email: 'jan.kowalski@example.com',
-    };
+    return true;
   }
 }
