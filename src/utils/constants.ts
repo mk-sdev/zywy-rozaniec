@@ -1,5 +1,5 @@
 import { CookieOptions } from 'express';
-
+console.log(process.env.NODE_ENV);
 export const accessTokenOptions: CookieOptions = {
   httpOnly: true,
   secure: true, // << MUSI być true, bo SameSite: 'none'
@@ -29,4 +29,4 @@ export const account_verification_lifespan = 1000 * 60 * 20; // 20 min
 export const account_deletion_lifespan = 1000 * 60 * 60 * 24 * 14; //2 weeks
 
 export const URL = 'http://localhost:3000';
-export const FRONTEND_URL = 'https://mk-sdev.github.io/admin-panel';
+export const FRONTEND_URL = 'https://admin-panel-sigma-seven.vercel.app';

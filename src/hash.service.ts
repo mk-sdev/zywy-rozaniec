@@ -8,9 +8,9 @@ export class HashService {
       process.env.NODE_ENV !== 'test'
         ? {
             type: argon2.argon2id,
-            timeCost: 4,
-            memoryCost: 2 ** 16,
-            parallelism: 2,
+            timeCost: 2,
+            memoryCost: 2 ** 12,
+            parallelism: 1,
           }
         : undefined;
 
