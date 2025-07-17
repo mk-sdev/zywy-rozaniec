@@ -2,16 +2,16 @@ import { CookieOptions } from 'express';
 
 export const accessTokenOptions: CookieOptions = {
   httpOnly: true,
-  secure: false,
-  sameSite: 'lax',
-  maxAge: 1000 * 60 * 15, // 15 miutes
+  secure: true, // << MUSI być true, bo SameSite: 'none'
+  sameSite: 'none', // << MUSI być none dla cross-origin
+  maxAge: 1000 * 60 * 15,
 };
 
 export const refreshTokenOptions: CookieOptions = {
   httpOnly: true,
-  secure: false,
-  sameSite: 'lax',
-  maxAge: 1000 * 60 * 60 * 24 * 7, // 1 week
+  secure: true,
+  sameSite: 'none',
+  maxAge: 1000 * 60 * 60 * 24 * 7,
 };
 
 // access jwt lifespan
