@@ -32,6 +32,11 @@ import { UserRequest } from './utils/interfaces';
 export class AppController {
   constructor(private readonly appService: AppService) {}
 
+  @Get()
+  fn(): string {
+    return 'Serwer się rozgrzał!';
+  }
+
   @Get('hello')
   getHello(): string {
     return 'Hello World!';
