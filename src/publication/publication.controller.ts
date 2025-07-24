@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Get,
@@ -7,8 +8,12 @@ import {
   Post,
   Put,
   Query,
+  UploadedFile,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import fetch from 'node-fetch';
 import { JwtGuard } from '../jwt.guard';
 import { Publication } from '../repository/publication.schema';
 import { PublicationRepositoryService } from '../repository/publicationRepository.service';
@@ -53,5 +58,24 @@ export class PublicationController {
       message: 'Publication updated successfully',
       updated: true,
     };
+  }
+
+  @Post('upload-imgbb')
+  @UseGuards(JwtGuard)
+  @UseInterceptors(FileInterceptor('file'))
+  async uploadFileToImgbb(@UploadedFile() file: Express.Multer.File) {
+    if (!file) {
+      throw new BadRequestException('Plik nie został przesłany');
+    }
+    const apiKey = process.env.IMGBB_KEY;
+    if (!apiKey) {
+      throw new Error('Brak klucza API IMGBB');
+    }
+    const url = await this.publicationService.uploadImageToImgbb(
+      file.buffer,
+      apiKey,
+    );
+
+    return { url };
   }
 }
