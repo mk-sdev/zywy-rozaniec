@@ -17,7 +17,8 @@ import { JwtGuard } from '../jwt.guard';
 import { Publication } from '../repository/publication.schema';
 import { PublicationRepositoryService } from '../repository/publicationRepository.service';
 import { PublicationService } from './publication.service';
-import { File } from 'multer';
+import { Express } from 'express';
+
 
 @Controller('post')
 export class PublicationController {
@@ -63,7 +64,7 @@ export class PublicationController {
   @Post('upload-imgbb')
   @UseGuards(JwtGuard)
   @UseInterceptors(FileInterceptor('file'))
-  async uploadFileToImgbb(@UploadedFile() file: File) {
+  async uploadFileToImgbb(@UploadedFile() file: Express.Multer.File) {
     if (!file) {
       throw new BadRequestException('Plik nie został przesłany');
     }
