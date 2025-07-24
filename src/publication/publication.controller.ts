@@ -13,11 +13,11 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import fetch from 'node-fetch';
 import { JwtGuard } from '../jwt.guard';
 import { Publication } from '../repository/publication.schema';
 import { PublicationRepositoryService } from '../repository/publicationRepository.service';
 import { PublicationService } from './publication.service';
+import { File } from 'multer';
 
 @Controller('post')
 export class PublicationController {
@@ -63,7 +63,7 @@ export class PublicationController {
   @Post('upload-imgbb')
   @UseGuards(JwtGuard)
   @UseInterceptors(FileInterceptor('file'))
-  async uploadFileToImgbb(@UploadedFile() file: Express.Multer.File) {
+  async uploadFileToImgbb(@UploadedFile() file: File) {
     if (!file) {
       throw new BadRequestException('Plik nie został przesłany');
     }
