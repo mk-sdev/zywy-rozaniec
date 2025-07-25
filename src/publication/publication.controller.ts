@@ -19,7 +19,6 @@ import { PublicationRepositoryService } from '../repository/publicationRepositor
 import { PublicationService } from './publication.service';
 import { Express } from 'express';
 
-
 @Controller('post')
 export class PublicationController {
   constructor(

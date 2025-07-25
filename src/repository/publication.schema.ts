@@ -8,6 +8,9 @@ export class Publication {
   @Prop({ required: true, unique: true, index: true })
   index: number;
 
+  @Prop({ required: true })
+  title: string;
+
   @Prop([
     {
       type: {
