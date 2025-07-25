@@ -43,7 +43,11 @@ export class PublicationController {
     @Query('index', ParseIntPipe) index: number,
     @Body() body: Publication,
   ): Promise<object> {
-    await this.publicationRepositoryService.insertOne(index, body.data);
+    await this.publicationRepositoryService.insertOne(
+      index,
+      body.title,
+      body.data,
+    );
     return {
       message: 'Publication created successfully',
       created: true,
@@ -53,7 +57,11 @@ export class PublicationController {
   @Put()
   @UseGuards(JwtGuard)
   async updatePublication(@Body() body: Publication): Promise<object> {
-    await this.publicationRepositoryService.updateOne(body.index, body.data);
+    await this.publicationRepositoryService.updateOne(
+      body.index,
+      body.title,
+      body.data,
+    );
     return {
       message: 'Publication updated successfully',
       updated: true,

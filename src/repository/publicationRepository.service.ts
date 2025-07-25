@@ -20,23 +20,25 @@ export class PublicationRepositoryService {
 
   async insertOne(
     index: number,
+    title: string,
     data: Array<{
       type: string;
       value: string;
       options?: Record<string, unknown>;
     }>,
   ): Promise<void> {
-    await this.publicationModel.create({ index, data });
+    await this.publicationModel.create({ index, title, data });
   }
 
   async updateOne(
     index: number,
+    title: string,
     data: Array<{
       type: string;
       value: string;
       options?: Record<string, unknown>;
     }>,
   ): Promise<void> {
-    await this.publicationModel.updateOne({ index }, { $set: { data } });
+    await this.publicationModel.updateOne({ index }, { $set: { title, data } });
   }
 }
