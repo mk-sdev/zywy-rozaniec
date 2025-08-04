@@ -1,59 +1,59 @@
 import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
-import { UserDocument } from './user.schema';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository, Not } from 'typeorm';
+import { User } from './user.entity';
+
 @Injectable()
 export class RepositoryService {
-  constructor(@InjectModel('User') private userModel: Model<UserDocument>) {}
+  constructor(
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
+  ) {}
 
   async insertOne({
     email,
     password,
-    // verificationToken,
-    // verificationTokenExpires,
   }: {
     email: string;
     password: string;
-    // verificationToken: string;
-    // verificationTokenExpires: number;
   }): Promise<void> {
-    await this.userModel.create({
+    const user = this.userRepository.create({
       email,
       password,
-      // verificationToken,
-      // verificationTokenExpires,
+      refreshTokens: [],
+    });
+    await this.userRepository.save(user);
+  }
+
+  async findOne(id: string): Promise<User | null> {
+    return this.userRepository.findOne({ where: { _id: id } });
+  }
+
+  async findOneByEmail(email: string): Promise<User | null> {
+    return this.userRepository.findOne({ where: { email } });
+  }
+
+  async findOneByVerificationToken(token: string): Promise<User | null> {
+    // return this.userRepository.findOne({ where: { verificationToken: token } });
+    return null;
+  }
+
+  async findOneByEmailToken(token: string): Promise<User | null> {
+    return this.userRepository.findOne({ where: { emailChangeToken: token } });
+  }
+
+  async findOneByPasswordResetToken(token: string): Promise<User | null> {
+    return this.userRepository.findOne({
+      where: { passwordResetToken: token },
     });
   }
 
-  async findOne(id: string): Promise<UserDocument | null> {
-    return this.userModel.findOne({ _id: id });
-  }
-
-  async findOneByEmail(email: string): Promise<UserDocument | null> {
-    return this.userModel.findOne({ email });
-  }
-
-  async findOneByVerificationToken(
-    token: string,
-  ): Promise<UserDocument | null> {
-    return this.userModel.findOne({ verificationToken: token });
-  }
-
-  async findOneByEmailToken(token: string): Promise<UserDocument | null> {
-    return this.userModel.findOne({ emailChangeToken: token });
-  }
-
-  async findOneByPasswordResetToken(
-    token: string,
-  ): Promise<UserDocument | null> {
-    return this.userModel.findOne({ passwordResetToken: token });
-  }
-
   async addRefreshToken(id: string, token: string): Promise<void> {
-    await this.userModel.updateOne(
-      { _id: id },
-      { $push: { refreshTokens: token } },
-    );
+    const user = await this.findOne(id);
+    if (user) {
+      user.refreshTokens.push(token);
+      await this.userRepository.save(user);
+    }
   }
 
   async replaceRefreshToken(
@@ -61,39 +61,32 @@ export class RepositoryService {
     oldToken: string,
     newToken: string,
   ): Promise<void> {
-    const result = await this.userModel.updateOne(
-      { _id: id, refreshTokens: oldToken },
-      { $set: { 'refreshTokens.$': newToken } },
-    );
-
-    // if old token hasn't been found, just add a new one
-    if (result.matchedCount === 0) {
-      await this.userModel.updateOne(
-        { _id: id },
-        { $push: { refreshTokens: newToken } },
-      );
+    const user = await this.findOne(id);
+    if (user) {
+      const index = user.refreshTokens.indexOf(oldToken);
+      if (index !== -1) {
+        user.refreshTokens[index] = newToken;
+      } else {
+        user.refreshTokens.push(newToken);
+      }
+      await this.userRepository.save(user);
     }
   }
 
   async removeRefreshToken(userId: string, token: string): Promise<void> {
-    await this.userModel.updateOne(
-      { _id: userId },
-      { $pull: { refreshTokens: token } },
-    );
+    const user = await this.findOne(userId);
+    if (user) {
+      user.refreshTokens = user.refreshTokens.filter((t) => t !== token);
+      await this.userRepository.save(user);
+    }
   }
 
   async trimRefreshTokens(userId: string, maxTokens = 5): Promise<void> {
-    await this.userModel.updateOne(
-      { _id: userId },
-      {
-        $push: {
-          refreshTokens: {
-            $each: [],
-            $slice: -maxTokens, // leaves 5 last (most recent) tokens
-          },
-        },
-      },
-    );
+    const user = await this.findOne(userId);
+    if (user) {
+      user.refreshTokens = user.refreshTokens.slice(-maxTokens);
+      await this.userRepository.save(user);
+    }
   }
 
   async setNewVerificationToken(
@@ -102,77 +95,60 @@ export class RepositoryService {
     token: string,
     expiresAt: number,
   ): Promise<void> {
-    await this.userModel.updateOne(
-      { email },
-      {
-        $set: {
-          password,
-          verificationToken: token,
-          verificationTokenExpires: expiresAt,
-        },
-      },
-    );
+    // const user = await this.findOneByEmail(email);
+    // if (user) {
+    //   user.password = password;
+    //   user.verificationToken = token;
+    //   user.verificationTokenExpires = expiresAt;
+    //   await this.userRepository.save(user);
+    // }
   }
 
   async cancelScheduledDeletion(userId: string): Promise<void> {
-    await this.userModel.updateOne(
-      { _id: userId },
-      {
-        $unset: {
-          isDeletionPending: '',
-          deletionScheduledAt: '',
-        },
-      },
-    );
+    // const user = await this.findOne(userId);
+    // if (user) {
+    //   user.isDeletionPending = false;
+    //   user.deletionScheduledAt = undefined;
+    //   await this.userRepository.save(user);
+    // }
   }
 
   async updatePasswordAndClearTokens(
     email: string,
     hashedPassword: string,
   ): Promise<void> {
-    await this.userModel.updateOne(
-      { email },
-      {
-        $set: {
-          password: hashedPassword,
-          refreshTokens: [],
-        },
-      },
-    );
+    const user = await this.findOneByEmail(email);
+    if (user) {
+      user.password = hashedPassword;
+      user.refreshTokens = [];
+      await this.userRepository.save(user);
+    }
   }
 
   async setNewPasswordFromResetToken(
     token: string,
     newPassword: string,
   ): Promise<void> {
-    await this.userModel.updateOne(
-      { passwordResetToken: token },
-      {
-        $set: {
-          password: newPassword,
-          refreshTokens: [],
-        },
-        $unset: {
-          passwordResetToken: '',
-          passwordResetTokenExpires: '',
-        },
-      },
-    );
+    const user = await this.findOneByPasswordResetToken(token);
+    if (user) {
+      user.password = newPassword;
+      user.refreshTokens = [];
+      user.passwordResetToken = undefined;
+      user.passwordResetTokenExpires = undefined;
+      await this.userRepository.save(user);
+    }
   }
 
   async markUserForDeletion(
     email: string,
     deletionScheduledAt: number,
   ): Promise<void> {
-    await this.userModel.updateOne(
-      { email },
-      {
-        $set: {
-          isDeletionPending: true,
-          deletionScheduledAt,
-        },
-      },
-    );
+    // const user = await this.findOneByEmail(email);
+    // if (user) {
+    //   user.isDeletionPending = true;
+    //   user.deletionScheduledAt = deletionScheduledAt;
+    //   await this.userRepository.save(user);
+    // }
   }
 
   async markEmailChangePending(
@@ -181,47 +157,34 @@ export class RepositoryService {
     emailChangeToken: string,
     emailChangeTokenExpires: number,
   ): Promise<void> {
-    await this.userModel.updateOne(
-      { _id: id },
-      {
-        $set: {
-          pendingEmail,
-          emailChangeToken,
-          emailChangeTokenExpires,
-        },
-      },
-    );
+    const user = await this.findOne(id);
+    if (user) {
+      user.pendingEmail = pendingEmail;
+      user.emailChangeToken = emailChangeToken;
+      user.emailChangeTokenExpires = emailChangeTokenExpires;
+      await this.userRepository.save(user);
+    }
   }
 
   async verifyAccount(id: string): Promise<void> {
-    await this.userModel.updateOne(
-      { _id: id },
-      {
-        $set: {
-          isVerified: true,
-        },
-        $unset: {
-          verificationToken: '',
-          verificationTokenExpires: '',
-        },
-      },
-    );
+    // const user = await this.findOne(id);
+    // if (user) {
+    //   user.isVerified = true;
+    //   user.verificationToken = undefined;
+    //   user.verificationTokenExpires = undefined;
+    //   await this.userRepository.save(user);
+    // }
   }
 
   async confirmEmailChange(userId: string, newEmail: string): Promise<void> {
-    await this.userModel.updateOne(
-      { _id: userId },
-      {
-        $set: {
-          email: newEmail,
-        },
-        $unset: {
-          pendingEmail: '',
-          emailChangeToken: '',
-          emailChangeTokenExpires: '',
-        },
-      },
-    );
+    const user = await this.findOne(userId);
+    if (user) {
+      user.email = newEmail;
+      user.pendingEmail = undefined;
+      user.emailChangeToken = undefined;
+      user.emailChangeTokenExpires = undefined;
+      await this.userRepository.save(user);
+    }
   }
 
   async remindPassword(
@@ -229,14 +192,11 @@ export class RepositoryService {
     resetToken: string,
     passwordResetTokenExpires: number,
   ): Promise<void> {
-    await this.userModel.updateOne(
-      { email },
-      {
-        $set: {
-          passwordResetToken: resetToken,
-          passwordResetTokenExpires,
-        },
-      },
-    );
+    const user = await this.findOneByEmail(email);
+    if (user) {
+      user.passwordResetToken = resetToken;
+      user.passwordResetTokenExpires = passwordResetTokenExpires;
+      await this.userRepository.save(user);
+    }
   }
 }

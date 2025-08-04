@@ -1,37 +1,38 @@
 import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
-import { PublicationDocument } from './publication.schema';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Publication } from './publication.entity';
 
 @Injectable()
 export class PublicationRepositoryService {
   constructor(
-    @InjectModel('Publication')
-    private publicationModel: Model<PublicationDocument>,
+    @InjectRepository(Publication)
+    private publicationRepository: Repository<Publication>,
   ) {}
 
-  getOneByDay(index: number): Promise<PublicationDocument | null> {
-    return this.publicationModel.findOne({ index });
-  }
+  // getOneByDay(index: number): Promise<Publication | null> {
+  //   return this.publicationRepository.findOne({ where: { index } });
+  // }
 
   getOne(
     part: string,
     mystery: number,
     index: number,
-  ): Promise<PublicationDocument | null> {
-    return this.publicationModel.findOne({ part, mystery, index }).exec();
+  ): Promise<Publication | null> {
+    return this.publicationRepository.findOne({
+      where: { part, mystery, index },
+    });
   }
 
-  //TODO: handle null
-  async getAllPublications(): Promise<PublicationDocument[]> {
-    return this.publicationModel.find().exec();
+  async getAllPublications(): Promise<Publication[]> {
+    return this.publicationRepository.find();
   }
 
   async getSomePublications(
     part: string,
     mystery: number,
-  ): Promise<PublicationDocument[] | null> {
-    return this.publicationModel.find({ part, mystery }).exec();
+  ): Promise<Publication[]> {
+    return this.publicationRepository.find({ where: { part, mystery } });
   }
 
   async insertOne(
@@ -45,7 +46,14 @@ export class PublicationRepositoryService {
       options?: Record<string, unknown>;
     }>,
   ): Promise<void> {
-    await this.publicationModel.create({ index, mystery, part, title, data });
+    const publication = this.publicationRepository.create({
+      index,
+      mystery,
+      part,
+      title,
+      data,
+    });
+    await this.publicationRepository.save(publication);
   }
 
   async updateOne(
@@ -59,9 +67,14 @@ export class PublicationRepositoryService {
       options?: Record<string, unknown>;
     }>,
   ): Promise<void> {
-    await this.publicationModel.updateOne(
-      { index, mystery, part },
-      { $set: { title, data } },
-    );
+    const existing = await this.publicationRepository.findOne({
+      where: { index, mystery, part },
+    });
+
+    if (existing) {
+      existing.title = title;
+      existing.data = data;
+      await this.publicationRepository.save(existing);
+    }
   }
 }

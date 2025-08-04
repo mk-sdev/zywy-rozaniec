@@ -121,7 +121,7 @@ export class MailService {
     //   throw new BadRequestException('The token has expired');
     // }
 
-    await this.repositoryService.verifyAccount(user._id as string);
+    await this.repositoryService.verifyAccount(user._id);
   }
 
   async changeEmail(id: string, newEmail: string, password: string) {

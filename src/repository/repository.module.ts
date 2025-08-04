@@ -1,16 +1,18 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import { UserSchema } from './user.schema';
-import { PublicationSchema } from './publication.schema';
+import { User } from './user.entity';
+import { Publication } from './publication.entity';
 import { RepositoryService } from './repository.service';
 import { PublicationRepositoryService } from './publicationRepository.service';
+import { TypeOrmModule } from '@nestjs/typeorm';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([{ name: 'User', schema: UserSchema }]),
-    MongooseModule.forFeature([
-      { name: 'Publication', schema: PublicationSchema },
-    ]),
+    TypeOrmModule.forFeature([Publication]),
+    TypeOrmModule.forFeature([User]),
+    // MongooseModule.forFeature([
+    //   { name: 'Publication', schema: PublicationSchema },
+    // ]),
   ],
   providers: [RepositoryService, PublicationRepositoryService],
   exports: [RepositoryService, PublicationRepositoryService],

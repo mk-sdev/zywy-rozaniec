@@ -62,7 +62,7 @@ export class PublicationService {
       part,
       mystery,
     );
-    return publications!.map((publication) => publication.index);
+    return publications.map((publication) => publication.index);
   }
 
   async uploadImageToImgbb(buffer: Buffer, apiKey: string): Promise<string> {

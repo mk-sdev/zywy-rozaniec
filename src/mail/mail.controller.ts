@@ -35,6 +35,7 @@ export class MailController {
   @HttpCode(HttpStatus.CREATED)
   @UseGuards(JwtGuard)
   async register(@Body() registerDto: RegisterDto) {
+    console.log('🚀 ~ MailController ~ register ~ registerDto:', registerDto);
     // const message = 'Verification link has been sent to your email address';
     await this.mailService.register(registerDto.email, registerDto.password);
     // return { message };

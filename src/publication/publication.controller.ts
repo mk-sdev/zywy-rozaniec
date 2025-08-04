@@ -14,7 +14,7 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { JwtGuard } from '../jwt.guard';
-import { Publication } from '../repository/publication.schema';
+import { Publication } from '../repository/publication.entity';
 import { PublicationRepositoryService } from '../repository/publicationRepository.service';
 import { PublicationService } from './publication.service';
 import { Express } from 'express';

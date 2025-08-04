@@ -12,15 +12,23 @@ import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 import { HashService } from './hash.service';
 import { PublicationModule } from './publication/publication.module';
+import { TypeOrmModule } from '@nestjs/typeorm';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true, // lets use process.env in the whole app
     }),
-    MongooseModule.forRoot(
-      process.env.MONGO_URI || 'mongodb://localhost:27017/rosary',
-    ),
+    TypeOrmModule.forRoot({
+      type: 'mysql',
+      host: process.env.DB_HOST || 'localhost',
+      port: parseInt(process.env.DB_PORT!) || 3306,
+      username: process.env.DB_USER || 'root',
+      password: process.env.DB_PASS || '',
+      database: process.env.DB_NAME || 'rosary',
+      entities: [__dirname + '/**/*.entity{.ts,.js}'],
+      synchronize: false,
+    }),
     ThrottlerModule.forRoot({
       throttlers: [
         {
