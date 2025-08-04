@@ -19,32 +19,59 @@ import { PublicationRepositoryService } from '../repository/publicationRepositor
 import { PublicationService } from './publication.service';
 import { Express } from 'express';
 
-@Controller('post')
+@Controller('posts')
 export class PublicationController {
   constructor(
     private readonly publicationRepositoryService: PublicationRepositoryService,
     private readonly publicationService: PublicationService,
   ) {}
-  @Get()
-  async getAllPublications(): Promise<Array<unknown>> {
-    return await this.publicationService.getAllPublications();
+  // @Get()
+  // async getAllPublications(): Promise<Array<unknown>> {
+  //   return await this.publicationService.getAllPublications();
+  // }
+
+  @Get() // tylko dla panelu admina do pokazywania wszystkich list na raz
+  async getAllPublicationsV2(): Promise<Array<unknown>> {
+    return await this.publicationService.getAllPublicationsV2();
   }
 
-  @Get(':index')
-  getPublication(@Param('index', ParseIntPipe) index: number): object {
-    const pub = this.publicationRepositoryService.getOneByDay(index);
-    console.log(pub);
-    return pub;
+  @Get(':part/:mystery/:index') // zwraca konkretny dzień
+  async getPublication(
+    @Param('part') part: string,
+    @Param('mystery', ParseIntPipe) mystery: number,
+    @Param('index', ParseIntPipe) index: number,
+  ) {
+    return await this.publicationRepositoryService.getOne(part, mystery, index);
   }
+
+  @Get(':part/:mystery') // zwraca liste dni dla konkretnej części i tajemnicy np [1,2]
+  async getSomePublications(
+    @Param('part') part: string,
+    @Param('mystery', ParseIntPipe) mystery: number,
+  ) {
+    return await this.publicationService.getSomePublications(part, mystery);
+  }
+
+  // ! legacy
+  // @Get(':index')
+  // getPublicationLegacy(@Param('index', ParseIntPipe) index: number): object {
+  //   const pub = this.publicationRepositoryService.getOneByDay(index);
+  //   console.log(pub);
+  //   return pub;
+  // }
 
   @Post()
   @UseGuards(JwtGuard)
   async createPublication(
+    @Query('part') part: string,
+    @Query('mystery', ParseIntPipe) mystery: number,
     @Query('index', ParseIntPipe) index: number,
     @Body() body: Publication,
   ): Promise<object> {
     await this.publicationRepositoryService.insertOne(
       index,
+      mystery,
+      part,
       body.title,
       body.data,
     );
@@ -59,6 +86,8 @@ export class PublicationController {
   async updatePublication(@Body() body: Publication): Promise<object> {
     await this.publicationRepositoryService.updateOne(
       body.index,
+      body.mystery,
+      body.part,
       body.title,
       body.data,
     );

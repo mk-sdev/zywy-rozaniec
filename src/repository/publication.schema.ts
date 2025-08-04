@@ -5,7 +5,21 @@ export type PublicationDocument = Publication & Document;
 
 @Schema()
 export class Publication {
-  @Prop({ required: true, unique: true, index: true })
+  @Prop({ required: true })
+  part: string; // radosna, bolesna, chwalebna, światła
+
+  @Prop({
+    required: true,
+    min: 1,
+    max: 5,
+    validate: {
+      validator: Number.isInteger,
+      message: '{VALUE} nie jest liczbą całkowitą',
+    },
+  })
+  mystery: number;
+
+  @Prop({ required: true })
   index: number;
 
   @Prop({ required: true })
@@ -14,7 +28,7 @@ export class Publication {
   @Prop([
     {
       type: {
-        type: String,
+        type: String, // Text | Image | Video | Game
         required: true,
       },
       value: {
