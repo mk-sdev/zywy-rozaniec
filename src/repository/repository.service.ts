@@ -2,12 +2,15 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './user.entity';
+import { RefreshToken } from './refreshToken.entity';
 
 @Injectable()
 export class RepositoryService {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    @InjectRepository(RefreshToken)
+    private readonly refreshTokenRepository: Repository<RefreshToken>,
   ) {}
 
   async insertOne({
@@ -20,13 +23,15 @@ export class RepositoryService {
     const user = this.userRepository.create({
       login,
       password,
-      refreshTokens: [],
     });
     await this.userRepository.save(user);
   }
 
   async findOne(_id: string): Promise<User | null> {
-    return this.userRepository.findOne({ where: { _id } });
+    return this.userRepository.findOne({
+      where: { _id },
+      relations: ['refreshTokens'], // <- ważne!
+    });
   }
 
   async findOneByLogin(login: string): Promise<User | null> {
@@ -36,8 +41,8 @@ export class RepositoryService {
   async addRefreshToken(id: string, token: string): Promise<void> {
     const user = await this.findOne(id);
     if (user) {
-      user.refreshTokens.push(token);
-      await this.userRepository.save(user);
+      const rt = this.refreshTokenRepository.create({ token, user });
+      await this.refreshTokenRepository.save(rt);
     }
   }
 
@@ -47,30 +52,39 @@ export class RepositoryService {
     newToken: string,
   ): Promise<void> {
     const user = await this.findOne(id);
-    if (user) {
-      const index = user.refreshTokens.indexOf(oldToken);
-      if (index !== -1) {
-        user.refreshTokens[index] = newToken;
-      } else {
-        user.refreshTokens.push(newToken);
-      }
-      await this.userRepository.save(user);
+    if (!user) return;
+
+    // Znajdź stary token
+    const existing = await this.refreshTokenRepository.findOne({
+      where: { token: oldToken, user: { _id: id } },
+    });
+
+    if (existing) {
+      await this.refreshTokenRepository.remove(existing);
     }
+
+    // Dodaj nowy
+    const newEntry = this.refreshTokenRepository.create({
+      token: newToken,
+      user,
+    });
+    await this.refreshTokenRepository.save(newEntry);
   }
 
   async removeRefreshToken(userId: string, token: string): Promise<void> {
-    const user = await this.findOne(userId);
-    if (user) {
-      user.refreshTokens = user.refreshTokens.filter((t) => t !== token);
-      await this.userRepository.save(user);
-    }
+    await this.refreshTokenRepository.delete({ token });
   }
 
   async trimRefreshTokens(userId: string, maxTokens = 5): Promise<void> {
-    const user = await this.findOne(userId);
-    if (user) {
-      user.refreshTokens = user.refreshTokens.slice(-maxTokens);
-      await this.userRepository.save(user);
+    const tokens = await this.refreshTokenRepository.find({
+      where: { user: { _id: userId } },
+      order: { token: 'ASC' }, // lub createdAt, jeśli masz
+    });
+
+    const excess = tokens.length - maxTokens;
+    if (excess > 0) {
+      const toRemove = tokens.slice(0, excess);
+      await this.refreshTokenRepository.remove(toRemove);
     }
   }
 }

@@ -1,8 +1,15 @@
-import { Entity, Column, PrimaryGeneratedColumn, Index } from 'typeorm';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  Index,
+  OneToMany,
+} from 'typeorm';
+import { RefreshToken } from './refreshToken.entity';
 
 @Entity()
 export class User {
-  @PrimaryGeneratedColumn()
+  @PrimaryGeneratedColumn('uuid')
   _id: string;
 
   @Column({ unique: true })
@@ -12,6 +19,8 @@ export class User {
   @Column()
   password: string;
 
-  @Column('simple-array')
-  refreshTokens: string[];
+  @OneToMany(() => RefreshToken, (refreshToken) => refreshToken.user, {
+    cascade: true,
+  })
+  refreshTokens: RefreshToken[];
 }

@@ -89,14 +89,14 @@ export class AppService {
       for (const hashedToken of user.refreshTokens) {
         //compare via this.hashService.verify
         const isMatch = await this.hashService.verify(
-          hashedToken,
+          hashedToken.token,
           refresh_token,
         );
         if (isMatch) {
           //removed the token from the db
           await this.repositoryService.removeRefreshToken(
             payload.sub, //
-            hashedToken,
+            hashedToken.token,
           );
         }
       }
@@ -130,14 +130,14 @@ export class AppService {
 
       for (const hashedToken of user.refreshTokens) {
         const isMatch = await this.hashService.verify(
-          hashedToken,
+          hashedToken.token, //! previously hashedToken
           refresh_token,
         );
         if (isMatch) {
           validTokenFound = true;
           await this.repositoryService.replaceRefreshToken(
             user._id,
-            hashedToken,
+            hashedToken.token,
             newHashedRefreshToken,
           );
           break;

@@ -1,18 +1,16 @@
 import { Module } from '@nestjs/common';
-import { MongooseModule } from '@nestjs/mongoose';
-import { User } from './user.entity';
-import { Publication } from './publication.entity';
-import { RepositoryService } from './repository.service';
-import { PublicationRepositoryService } from './publicationRepository.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { Publication } from './publication.entity';
+import { PublicationRepositoryService } from './publicationRepository.service';
+import { RefreshToken } from './refreshToken.entity';
+import { RepositoryService } from './repository.service';
+import { User } from './user.entity';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Publication]),
     TypeOrmModule.forFeature([User]),
-    // MongooseModule.forFeature([
-    //   { name: 'Publication', schema: PublicationSchema },
-    // ]),
+    TypeOrmModule.forFeature([RefreshToken]),
   ],
   providers: [RepositoryService, PublicationRepositoryService],
   exports: [RepositoryService, PublicationRepositoryService],
