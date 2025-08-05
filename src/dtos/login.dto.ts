@@ -1,8 +1,9 @@
 import { IsEmail, IsNotEmpty, IsString, Matches } from 'class-validator';
 
 export class LoginDto {
-  @IsEmail({}, { message: 'Niepoprawny format maila' })
-  email: string;
+  @IsString({ message: 'Login musi być stringiem' })
+  @IsNotEmpty({ message: 'Login nie może być pusty' })
+  login: string;
 
   @IsNotEmpty({ message: 'Hasło nie może być puste' })
   @IsString({ message: 'Hasło musi być w formie tekstowej' })

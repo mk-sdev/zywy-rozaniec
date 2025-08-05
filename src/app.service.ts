@@ -1,14 +1,8 @@
-import {
-  ConflictException,
-  Inject,
-  Injectable,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { RepositoryService } from './repository/repository.service';
-import { account_deletion_lifespan } from './utils/constants';
-import { JwtPayload } from './utils/interfaces';
 import { HashService } from './hash.service';
+import { RepositoryService } from './repository/repository.service';
+import { JwtPayload } from './utils/interfaces';
 
 @Injectable()
 export class AppService {
@@ -21,11 +15,27 @@ export class AppService {
     private readonly hashService: HashService,
   ) {}
 
+  async register(login: string, password: string): Promise<void> {
+    const existingUser = await this.repositoryService.findOneByLogin(login);
+    if (existingUser) {
+      // do not do anything to not to reveal the account exists in the db
+      return;
+    }
+
+    const hashedPassword = await this.hashService.hash(password); // 10 salt rounds
+
+    // Add the user to the db
+    await this.repositoryService.insertOne({
+      login,
+      password: hashedPassword,
+    });
+  }
+
   async login(
-    email: string,
+    login: string,
     password: string,
   ): Promise<{ access_token: string; refresh_token: string }> {
-    const user = await this.repositoryService.findOneByEmail(email); //* find a user with a provided email
+    const user = await this.repositoryService.findOneByLogin(login); //* find a user with a provided login
     if (!user) {
       throw new UnauthorizedException();
     }
@@ -53,10 +63,7 @@ export class AppService {
       await this.hashService.hash(refresh_token);
 
     //* save refresh token to the db
-    await this.repositoryService.addRefreshToken(
-      user._id as string,
-      hashedRefreshToken,
-    );
+    await this.repositoryService.addRefreshToken(user._id, hashedRefreshToken);
 
     await this.repositoryService.trimRefreshTokens(String(user._id), 5);
 
@@ -110,7 +117,7 @@ export class AppService {
 
       if (!user) throw new UnauthorizedException('Invalid refresh token');
 
-      const newPayload = { sub: user._id, email: user.email };
+      const newPayload = { sub: user._id, login: user.login };
       const newAccessToken =
         await this.accessTokenService.signAsync(newPayload);
       const newRefreshToken =
@@ -129,7 +136,7 @@ export class AppService {
         if (isMatch) {
           validTokenFound = true;
           await this.repositoryService.replaceRefreshToken(
-            user._id as string,
+            user._id,
             hashedToken,
             newHashedRefreshToken,
           );
@@ -149,55 +156,5 @@ export class AppService {
       console.error(err);
       throw new UnauthorizedException('Could not refresh tokens: ' + err);
     }
-  }
-
-  async changePassword(
-    id: string,
-    currentPassword: string,
-    newPassword: string,
-  ) {
-    if (currentPassword === newPassword) {
-      throw new Error('New password cannot be the same as the old one');
-    }
-
-    const user = await this.repositoryService.findOne(id);
-    if (!user) {
-      throw new ConflictException('The user of the given email doesn`t exist');
-    }
-
-    const isPasswordValid = await this.hashService.verify(
-      user.password,
-      currentPassword,
-    );
-    if (!isPasswordValid) {
-      throw new UnauthorizedException('Current password is incorrect');
-    }
-
-    const hashedNewPassword = await this.hashService.hash(newPassword);
-    await this.repositoryService.updatePasswordAndClearTokens(
-      user.email,
-      hashedNewPassword,
-    );
-  }
-
-  async markForDeletion(id: string, password: string) {
-    // TODO: add a cron job for deleting accounts after the deletionScheduledAt time
-    const user = await this.repositoryService.findOne(id);
-    if (!user) {
-      throw new ConflictException('The user of the given email doesn`t exist');
-    }
-
-    const isPasswordValid = await this.hashService.verify(
-      user.password,
-      password,
-    );
-    if (!isPasswordValid) {
-      throw new UnauthorizedException('Current password is incorrect');
-    }
-    const deletionScheduledAt = Date.now() + account_deletion_lifespan;
-    await this.repositoryService.markUserForDeletion(
-      user.email,
-      deletionScheduledAt,
-    );
   }
 }

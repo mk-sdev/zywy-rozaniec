@@ -1,5 +1,4 @@
 import {
-  IsEmail,
   IsNotEmpty,
   IsString,
   Matches,
@@ -8,24 +7,27 @@ import {
 } from 'class-validator';
 
 export class RegisterDto {
-  @IsEmail({}, { message: 'Invalid email format' })
-  email: string;
+  @IsString({ message: 'Login musi być stringiem' })
+  @IsNotEmpty({ message: 'Login nie może być pusty' })
+  @MinLength(8, { message: 'Login musi składać się z co najmniej 8 znaków' })
+  @MaxLength(30, { message: 'Login musi składać się z co najwyżej 30 znaków' })
+  login: string;
 
-  @IsNotEmpty({ message: 'Password cannot be empty' })
-  @IsString({ message: 'Password must be a string' })
-  @MinLength(8, { message: 'Password must contain at least 6 characters' })
-  @MaxLength(30, { message: 'Password must contain at most 30 characters' })
+  @IsNotEmpty({ message: 'Hasło nie może być puste' })
+  @IsString({ message: 'Hasło musi być stringiem' })
+  @MinLength(8, { message: 'Hasło musi składać się z co najmniej 8 znaków' })
+  @MaxLength(30, { message: 'Hasło musi składać się z co najwyżej 30 znaków' })
   @Matches(/(?=.*[a-z])/, {
-    message: 'Password must contain at least 1 lower case letter',
+    message: 'Hasło musi zawierać co najmniej jedną małą literę',
   })
   @Matches(/(?=.*[A-Z])/, {
-    message: 'Password must contain at least 1 capital letter',
+    message: 'Hasło musi zawierać co najmniej jedną dużą literę',
   })
   @Matches(/(?=.*\d)/, {
-    message: 'Password must contain at least 1 digit',
+    message: 'Hasło musi zawierać co najmniej jedną cyfrę',
   })
   @Matches(/(?=.*[!@#$%^&*()\-_=+{};:,<.>])/, {
-    message: 'Password must contain at least 1 special character',
+    message: 'Hasło musi zawierać co najmniej jeden znak specjalny',
   })
   password: string;
 }

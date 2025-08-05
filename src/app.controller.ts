@@ -1,12 +1,12 @@
 import {
   Body,
   Controller,
-  Delete,
   Get,
   Headers,
   HttpCode,
   HttpStatus,
   Patch,
+  Post,
   Req,
   Res,
   UnauthorizedException,
@@ -16,12 +16,11 @@ import {
 } from '@nestjs/common';
 import { Response } from 'express';
 import { AppService } from './app.service';
-import { ChangePasswordDto } from './dtos/changePassword.dto';
 import { LoginDto } from './dtos/login.dto';
-import { Id } from './id.decorator';
 import { JwtGuard } from './jwt.guard';
 import { accessTokenOptions, refreshTokenOptions } from './utils/constants';
 import { UserRequest } from './utils/interfaces';
+import { RegisterDto } from './dtos/register.dto';
 @Controller()
 @UsePipes(
   new ValidationPipe({
@@ -42,6 +41,13 @@ export class AppController {
     return 'Hello World!';
   }
 
+  @Post('register')
+  @HttpCode(HttpStatus.CREATED)
+  @UseGuards(JwtGuard)
+  async register(@Body() registerDto: RegisterDto) {
+    await this.appService.register(registerDto.login, registerDto.password);
+  }
+
   @Patch('login')
   @HttpCode(HttpStatus.OK)
   async signIn(
@@ -49,7 +55,7 @@ export class AppController {
     @Res({ passthrough: true }) response: Response,
   ) {
     const { access_token, refresh_token } = await this.appService.login(
-      loginDto.email,
+      loginDto.login,
       loginDto.password,
     );
 
@@ -97,19 +103,6 @@ export class AppController {
     res.cookie('refresh_token', refreshed.refresh_token, refreshTokenOptions);
 
     return { message: 'Refresh successful' };
-  }
-
-  @Patch('change-password')
-  @UseGuards(JwtGuard)
-  async changePassword(@Id() id: string, @Body() body: ChangePasswordDto) {
-    return this.appService.changePassword(id, body.password, body.newPassword);
-  }
-
-  @Delete('delete-account')
-  @HttpCode(HttpStatus.OK)
-  @UseGuards(JwtGuard)
-  async deleteAccount(@Id() id: string, @Body() body: { password: string }) {
-    await this.appService.markForDeletion(id, body.password);
   }
 
   @Get('isLogged')

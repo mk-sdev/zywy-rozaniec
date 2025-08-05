@@ -7,32 +7,11 @@ export class User {
 
   @Column({ unique: true })
   @Index()
-  email: string;
+  login: string;
 
   @Column()
   password: string;
 
-  @Column('simple-array', { default: '' })
+  @Column('simple-array')
   refreshTokens: string[];
-
-  // * for email change
-
-  @Column({ nullable: true })
-  pendingEmail?: string;
-
-  @Column({ nullable: true })
-  @Index({ unique: false, where: 'emailChangeToken IS NOT NULL' })
-  emailChangeToken?: string;
-
-  @Column({ type: 'bigint', nullable: true })
-  emailChangeTokenExpires?: number;
-
-  // * for password change
-
-  @Column({ nullable: true })
-  @Index({ unique: false, where: 'passwordResetToken IS NOT NULL' })
-  passwordResetToken?: string;
-
-  @Column({ type: 'bigint', nullable: true })
-  passwordResetTokenExpires?: number;
 }
