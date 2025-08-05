@@ -9,7 +9,8 @@ import {
 export class RegisterDto {
   @IsString({ message: 'Login musi być stringiem' })
   @IsNotEmpty({ message: 'Login nie może być pusty' })
-  @MinLength(8, { message: 'Login musi składać się z co najmniej 8 znaków' })
+  @Matches(/\S/, { message: 'Login nie może składać się wyłącznie ze spacji' })
+  @MinLength(3, { message: 'Login musi składać się z co najmniej 3 znaki' })
   @MaxLength(30, { message: 'Login musi składać się z co najwyżej 30 znaków' })
   login: string;
 

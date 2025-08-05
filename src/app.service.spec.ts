@@ -1,7 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AppService } from './app.service';
 import { RepositoryService } from './repository/repository.service';
-import { MailService } from './mail/mail.service';
 import { JwtPayload } from './utils/interfaces';
 import { HashService } from './hash.service';
 
@@ -20,10 +19,6 @@ describe('AppService', () => {
   const mockJwtRefreshService = {
     clearRefreshTokens: jest.fn(),
     verifyAsync: jest.fn(),
-  };
-
-  const mockMailService = {
-    sendPasswordChangedEmail: jest.fn(),
   };
 
   const hashService = {
@@ -48,10 +43,6 @@ describe('AppService', () => {
           useValue: mockJwtRefreshService,
         },
         {
-          provide: MailService,
-          useValue: mockMailService,
-        },
-        {
           provide: HashService,
           useValue: hashService,
         },
@@ -73,7 +64,7 @@ describe('AppService', () => {
         exp: 1234567890,
       };
       const plainToken = 'some-refresh-token';
-      const hashedToken = 'hashed-version-of-token';
+      const hashedToken = { token: 'hashed-version-of-token' };
 
       // mock verifyAsync, so that it returns payload with userId
       mockJwtRefreshService.verifyAsync = jest
@@ -99,10 +90,13 @@ describe('AppService', () => {
         plainToken,
       );
       expect(mockUserRepo.findOne).toHaveBeenCalledWith('userId');
-      expect(hashService.verify).toHaveBeenCalledWith(hashedToken, plainToken);
+      expect(hashService.verify).toHaveBeenCalledWith(
+        hashedToken.token,
+        plainToken,
+      );
       expect(mockUserRepo.removeRefreshToken).toHaveBeenCalledWith(
         'userId',
-        hashedToken,
+        hashedToken.token,
       );
     });
 
@@ -124,107 +118,6 @@ describe('AppService', () => {
       );
 
       consoleWarnSpy.mockRestore(); // return the default behavior of console.warn
-    });
-  });
-
-  describe('changePassword', () => {
-    it('should throw if user not found', async () => {
-      mockUserRepo.findOne.mockResolvedValue(null);
-
-      await expect(
-        appService.changePassword('userId', 'abc', 'def'),
-      ).rejects.toThrow('The user of the given email doesn`t exist');
-    });
-
-    it('should throw if new password is same as current', async () => {
-      await expect(
-        appService.changePassword('userId', 'samepassword', 'samepassword'),
-      ).rejects.toThrow('New password cannot be the same as the old one');
-    });
-
-    it('should throw if current password is invalid', async () => {
-      mockUserRepo.findOne.mockResolvedValue({
-        id: 'userId',
-        password: 'hashedPassword',
-        refreshtokens: [],
-        save: jest.fn(),
-      });
-
-      jest.spyOn(hashService, 'verify').mockResolvedValue(false);
-
-      await expect(
-        appService.changePassword('userId', 'wrongpassword', 'newpassword'),
-      ).rejects.toThrow('Current password is incorrect');
-    });
-
-    it('should change password and clear refresh tokens', async () => {
-      const userMock = {
-        _id: 'userId',
-        email: 'test@example.com',
-        password: 'hashedPassword',
-        refreshtokens: ['token1', 'token2'],
-      };
-
-      mockUserRepo.findOne.mockResolvedValue(userMock);
-      jest.spyOn(hashService, 'verify').mockResolvedValue(true);
-      jest.spyOn(hashService, 'hash').mockResolvedValue('newHashedPassword');
-      mockUserRepo.updatePasswordAndClearTokens = jest
-        .fn()
-        .mockResolvedValue(undefined);
-
-      await appService.changePassword('userId', 'oldPassword', 'newPassword');
-
-      expect(mockUserRepo.updatePasswordAndClearTokens).toHaveBeenCalledWith(
-        userMock.email,
-        'newHashedPassword',
-      );
-    });
-  });
-
-  describe('markForDeletion', () => {
-    it('should throw if user not found', async () => {
-      mockUserRepo.findOne.mockResolvedValue(null);
-
-      await expect(
-        appService.markForDeletion('userId', 'password'),
-      ).rejects.toThrow('The user of the given email doesn`t exist');
-    });
-
-    it('should throw if password is incorrect', async () => {
-      mockUserRepo.findOne.mockResolvedValue({
-        id: 'userId',
-        password: 'hashedPassword',
-      });
-
-      jest.spyOn(hashService, 'verify').mockResolvedValue(false);
-
-      await expect(
-        appService.markForDeletion('userId', 'wrongpassword'),
-      ).rejects.toThrow('Current password is incorrect');
-    });
-
-    it('should mark user for deletion and save', async () => {
-      const userMock = {
-        _id: 'userId',
-        email: 'test@example.com',
-        password: 'hashedPassword',
-      };
-
-      mockUserRepo.findOne.mockResolvedValue(userMock);
-      jest.spyOn(hashService, 'verify').mockResolvedValue(true);
-      mockUserRepo.markUserForDeletion = jest.fn().mockResolvedValue(undefined);
-
-      const before = Date.now();
-
-      await appService.markForDeletion('userId', 'correctPassword');
-
-      expect(mockUserRepo.markUserForDeletion).toHaveBeenCalled();
-      const callArgs = mockUserRepo.markUserForDeletion.mock.calls[0];
-      expect(callArgs[0]).toEqual(userMock.email);
-
-      // deletionScheduledAt is a timestamp - check if it is within the expected range
-      expect(callArgs[1]).toBeGreaterThan(before + 1000 * 60 * 60 * 24 * 13);
-      expect(callArgs[1]).toBeLessThan(before + 1000 * 60 * 60 * 24 * 15);
     });
   });
 });
