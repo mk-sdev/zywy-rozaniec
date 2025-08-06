@@ -1,5 +1,5 @@
 import { CookieOptions } from 'express';
-console.log(process.env.NODE_ENV);
+
 export const accessTokenOptions: CookieOptions = {
   httpOnly: true,
   secure: true, // << MUSI być true, bo SameSite: 'none'
@@ -18,6 +18,3 @@ export const refreshTokenOptions: CookieOptions = {
 export const access_jwt_lifespan = '15m';
 // refresh jwt lifespan
 export const refresh_jwt_lifespan = '7d';
-
-export const URL = 'http://localhost:3000';
-export const FRONTEND_URL = 'https://admin-panel-sigma-seven.vercel.app';

@@ -32,18 +32,13 @@ export class AppController {
   constructor(private readonly appService: AppService) {}
 
   @Get()
-  fn(): string {
-    return 'Serwer się rozgrzał!';
-  }
-
-  @Get('hello')
-  getHello(): string {
-    return 'Hello World!';
+  fn(): boolean {
+    return true;
   }
 
   @Post('register')
   @HttpCode(HttpStatus.CREATED)
-  // @UseGuards(JwtGuard)
+  @UseGuards(JwtGuard)
   async register(@Body() registerDto: RegisterDto) {
     await this.appService.register(registerDto.login, registerDto.password);
   }
@@ -66,6 +61,7 @@ export class AppController {
   }
 
   @Patch('logout')
+  @UseGuards(JwtGuard)
   @HttpCode(HttpStatus.OK)
   async logout(
     @Req() req: UserRequest,

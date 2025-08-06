@@ -25,10 +25,6 @@ export class PublicationController {
     private readonly publicationRepositoryService: PublicationRepositoryService,
     private readonly publicationService: PublicationService,
   ) {}
-  // @Get()
-  // async getAllPublications(): Promise<Array<unknown>> {
-  //   return await this.publicationService.getAllPublications();
-  // }
 
   @Get() // tylko dla panelu admina do pokazywania wszystkich list na raz
   async getAllPublicationsV2(): Promise<Array<unknown>> {
@@ -51,14 +47,6 @@ export class PublicationController {
   ) {
     return await this.publicationService.getSomePublications(part, mystery);
   }
-
-  // ! legacy
-  // @Get(':index')
-  // getPublicationLegacy(@Param('index', ParseIntPipe) index: number): object {
-  //   const pub = this.publicationRepositoryService.getOneByDay(index);
-  //   console.log(pub);
-  //   return pub;
-  // }
 
   @Post()
   @UseGuards(JwtGuard)
