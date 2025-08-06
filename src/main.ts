@@ -13,7 +13,6 @@ async function bootstrap() {
     // ],
     origin: true,
     credentials: true,
-    // exposedHeaders: ['Authorization'], // for sending headers
   });
   app.use(cookieParser());
   await app.listen(process.env.PORT ?? 3000);

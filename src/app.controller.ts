@@ -43,7 +43,7 @@ export class AppController {
 
   @Post('register')
   @HttpCode(HttpStatus.CREATED)
-  @UseGuards(JwtGuard)
+  // @UseGuards(JwtGuard)
   async register(@Body() registerDto: RegisterDto) {
     await this.appService.register(registerDto.login, registerDto.password);
   }
