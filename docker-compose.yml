@@ -1,0 +1,36 @@
+services:
+  app:
+    build: .
+    container_name: nest_zr
+    ports:
+      - 3000:3000
+    env_file:
+      - .env
+    depends_on:
+      - db
+    volumes:
+      - zr_nest_volume:/app
+    networks:
+      - zr-net
+
+  db:
+    image: mysql:8.0
+    container_name: mysql_zr
+    ports:
+      - '3306:3306'
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: grupafr3_zrdzieci
+      MYSQL_USER: grupafr3_zrdzieci
+      MYSQL_PASSWORD: A!oquR%a@{AzKJ{D
+    volumes:
+      - zr_mysql_volume:/var/lib/mysql
+    networks:
+      - zr-net
+
+volumes:
+  zr_nest_volume:
+  zr_mysql_volume:
+
+networks:
+  zr-net:
