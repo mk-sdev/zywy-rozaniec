@@ -1,3 +1,14 @@
+Aby uruchomić:
+
+```
+npm install
+npm run build
+npm run start:prod
+```
+
+Wymaga zainstalowania Node i npm
+repozytorium: [LINK](https://github.com/mk-sdev/zywy-rozaniec)
+
 <p align="center">
   <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
 </p>
