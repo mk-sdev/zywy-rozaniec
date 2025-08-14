@@ -16,7 +16,7 @@ export class PublicationService {
   > {
     const publications = await this.publicationRepository.getAllPublications();
 
-    const validParts = ['radosna', 'bolesna', 'chwalebna', 'światła'] as const;
+    const validParts = ['radosna', 'światła', 'bolesna', 'chwalebna'] as const;
 
     // Inicjalizacja: dla każdej części 5 pustych tablic (jedna na każdą tajemnicę)
     const grouped: Record<string, number[][]> = {};
