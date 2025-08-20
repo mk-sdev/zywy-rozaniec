@@ -62,6 +62,7 @@ export class PublicationController {
       part,
       body.title,
       body.data,
+      body.quote,
       body.task,
     );
     return {
@@ -79,6 +80,7 @@ export class PublicationController {
       body.part,
       body.title,
       body.data,
+      body.quote,
       body.task,
     );
     return {

@@ -3,6 +3,12 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Publication } from './publication.entity';
 
+type Item = {
+  type: string;
+  value: string;
+  options?: Record<string, unknown>;
+};
+
 @Injectable()
 export class PublicationRepositoryService {
   constructor(
@@ -40,16 +46,9 @@ export class PublicationRepositoryService {
     mystery: number,
     part: string,
     title: string,
-    data: Array<{
-      type: string;
-      value: string;
-      options?: Record<string, unknown>;
-    }>,
-    task: Array<{
-      type: string;
-      value: string;
-      options?: Record<string, unknown>;
-    }>,
+    data: Array<Item>,
+    quote: Array<Item>,
+    task: Array<Item>,
   ): Promise<void> {
     const publication = this.publicationRepository.create({
       index,
@@ -57,6 +56,7 @@ export class PublicationRepositoryService {
       part,
       title,
       data,
+      quote,
       task,
     });
     await this.publicationRepository.save(publication);
@@ -67,16 +67,9 @@ export class PublicationRepositoryService {
     mystery: number,
     part: string,
     title: string,
-    data: Array<{
-      type: string;
-      value: string;
-      options?: Record<string, unknown>;
-    }>,
-    task: Array<{
-      type: string;
-      value: string;
-      options?: Record<string, unknown>;
-    }>,
+    data: Array<Item>,
+    quote: Array<Item>,
+    task: Array<Item>,
   ): Promise<void> {
     const existing = await this.publicationRepository.findOne({
       where: { index, mystery, part },
@@ -85,6 +78,7 @@ export class PublicationRepositoryService {
     if (existing) {
       existing.title = title;
       existing.data = data;
+      existing.quote = quote;
       existing.task = task;
       await this.publicationRepository.save(existing);
     }
