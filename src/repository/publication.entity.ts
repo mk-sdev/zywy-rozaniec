@@ -20,4 +20,11 @@ export class Publication {
     value: string;
     options?: Record<string, unknown>;
   }>;
+
+  @Column({ type: 'json' })
+  task: Array<{
+    type: string;
+    value: string;
+    options?: Record<string, unknown>;
+  }>;
 }

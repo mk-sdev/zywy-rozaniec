@@ -45,6 +45,11 @@ export class PublicationRepositoryService {
       value: string;
       options?: Record<string, unknown>;
     }>,
+    task: Array<{
+      type: string;
+      value: string;
+      options?: Record<string, unknown>;
+    }>,
   ): Promise<void> {
     const publication = this.publicationRepository.create({
       index,
@@ -52,6 +57,7 @@ export class PublicationRepositoryService {
       part,
       title,
       data,
+      task,
     });
     await this.publicationRepository.save(publication);
   }
@@ -66,6 +72,11 @@ export class PublicationRepositoryService {
       value: string;
       options?: Record<string, unknown>;
     }>,
+    task: Array<{
+      type: string;
+      value: string;
+      options?: Record<string, unknown>;
+    }>,
   ): Promise<void> {
     const existing = await this.publicationRepository.findOne({
       where: { index, mystery, part },
@@ -74,6 +85,7 @@ export class PublicationRepositoryService {
     if (existing) {
       existing.title = title;
       existing.data = data;
+      existing.task = task;
       await this.publicationRepository.save(existing);
     }
   }

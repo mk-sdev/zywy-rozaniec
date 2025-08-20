@@ -62,6 +62,7 @@ export class PublicationController {
       part,
       body.title,
       body.data,
+      body.task,
     );
     return {
       message: 'Publication created successfully',
@@ -78,6 +79,7 @@ export class PublicationController {
       body.part,
       body.title,
       body.data,
+      body.task,
     );
     return {
       message: 'Publication updated successfully',
