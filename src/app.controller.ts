@@ -21,6 +21,7 @@ import { JwtGuard } from './jwt.guard';
 import { accessTokenOptions, refreshTokenOptions } from './utils/constants';
 import { UserRequest } from './utils/interfaces';
 import { RegisterDto } from './dtos/register.dto';
+import { Id } from './id.decorator';
 @Controller()
 @UsePipes(
   new ValidationPipe({
@@ -103,7 +104,14 @@ export class AppController {
 
   @Get('isLogged')
   @UseGuards(JwtGuard)
-  getUserInfo(@Headers('authorization') authHeader: string) {
+  isLogged(@Headers('authorization') authHeader: string) {
     return true;
+  }
+
+  @Get('userinfo')
+  @UseGuards(JwtGuard)
+  async getUserInfo(@Id() id: string) {
+    const user = await this.appService.getUserById(id);
+    return { login: user.login };
   }
 }

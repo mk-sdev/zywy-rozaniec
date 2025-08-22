@@ -157,4 +157,12 @@ export class AppService {
       throw new UnauthorizedException('Could not refresh tokens: ' + err);
     }
   }
+
+  async getUserById(id: string) {
+    const user = await this.repositoryService.findOne(id);
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+    return user;
+  }
 }
