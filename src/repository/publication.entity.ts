@@ -1,4 +1,5 @@
-import { Entity, PrimaryGeneratedColumn, Column, PrimaryColumn } from 'typeorm';
+import { Column, Entity, PrimaryColumn } from 'typeorm';
+import { Item } from './item.type';
 
 @Entity()
 export class Publication {
@@ -15,29 +16,11 @@ export class Publication {
   title: string;
 
   @Column({ type: 'json' })
-  data: Array<{
-    type: string;
-    value: string;
-    options?: Record<string, unknown>;
-  }>;
+  data: Array<Item>;
 
   @Column({ type: 'json', nullable: true })
-  quote: Array<{
-    type: string;
-    value: string;
-    options?: Record<string, unknown>;
-  }>;
+  quote: Array<Item>;
 
   @Column({ type: 'json', nullable: true })
-  task: Array<{
-    type: string;
-    value: string;
-    options?: Record<string, unknown>;
-  }>;
+  task: Array<Item>;
 }
-
-// export interface Quote {
-//   type: string;
-//   value: string;
-//   options?: Record<string, unknown>;
-// }

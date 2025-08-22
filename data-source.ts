@@ -3,6 +3,7 @@ import { DataSource } from 'typeorm';
 import { Publication } from './src/repository/publication.entity';
 import { User } from './src/repository/user.entity';
 import { RefreshToken } from './src/repository/refreshToken.entity';
+import { Help } from './src/repository/help.entity';
 
 const isCompiled = __filename.includes('dist') || __dirname.includes('dist');
 
@@ -13,7 +14,7 @@ export const AppDataSource = new DataSource({
   username: process.env.DB_USER || 'root',
   password: process.env.DB_PASS || '',
   database: process.env.DB_NAME || 'zywy_rozaniec',
-  entities: [Publication, User, RefreshToken],
+  entities: [Publication, User, RefreshToken, Help],
   migrations: [
     isCompiled
       ? 'dist/migrations/*.js' // to start the app

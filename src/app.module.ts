@@ -11,6 +11,7 @@ import { PublicationModule } from './publication/publication.module';
 import { RepositoryModule } from './repository/repository.module';
 import { TokensModule } from './utils/tokens.module';
 import { AppDataSource } from 'data-source';
+import { HelpModule } from './help/help.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { AppDataSource } from 'data-source';
     RepositoryModule,
     TokensModule,
     JwtModule,
+    HelpModule,
   ],
   controllers: [AppController],
   providers: [

@@ -2,12 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Publication } from './publication.entity';
-
-type Item = {
-  type: string;
-  value: string;
-  options?: Record<string, unknown>;
-};
+import { Item } from './item.type';
 
 @Injectable()
 export class PublicationRepositoryService {
