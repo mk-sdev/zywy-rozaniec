@@ -78,7 +78,7 @@ export class RepositoryService {
   async trimRefreshTokens(userId: string, maxTokens = 5): Promise<void> {
     const tokens = await this.refreshTokenRepository.find({
       where: { user: { _id: userId } },
-      order: { token: 'ASC' }, // lub createdAt, jeśli masz
+      order: { token: 'ASC' },
     });
 
     const excess = tokens.length - maxTokens;
@@ -86,5 +86,21 @@ export class RepositoryService {
       const toRemove = tokens.slice(0, excess);
       await this.refreshTokenRepository.remove(toRemove);
     }
+  }
+
+  async updatePassword(
+    login: string,
+    newHashedPassword: string,
+  ): Promise<void> {
+    const user = await this.findOneByLogin(login);
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    user.password = newHashedPassword;
+    await this.userRepository.save(user);
+
+    // Usuń wszystkie tokeny odświeżania
+    // await this.refreshTokenRepository.delete({ user: { _id: user._id } });
   }
 }

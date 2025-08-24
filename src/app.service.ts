@@ -1,4 +1,9 @@
-import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  ConflictException,
+  Inject,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { HashService } from './hash.service';
 import { RepositoryService } from './repository/repository.service';
@@ -156,6 +161,35 @@ export class AppService {
       console.error(err);
       throw new UnauthorizedException('Could not refresh tokens: ' + err);
     }
+  }
+
+  async changePassword(
+    id: string,
+    currentPassword: string,
+    newPassword: string,
+  ) {
+    if (currentPassword === newPassword) {
+      console.log('New password cannot be the same as the old one');
+      throw new Error('New password cannot be the same as the old one');
+    }
+
+    const user = await this.repositoryService.findOne(id);
+    if (!user) {
+      console.log('The user of the given email doesn`t exist');
+      throw new ConflictException('The user of the given email doesn`t exist');
+    }
+
+    const isPasswordValid = await this.hashService.verify(
+      user.password,
+      currentPassword,
+    );
+    if (!isPasswordValid) {
+      console.log('Current password is incorrect');
+      throw new UnauthorizedException('Current password is incorrect');
+    }
+
+    const hashedNewPassword = await this.hashService.hash(newPassword);
+    await this.repositoryService.updatePassword(user.login, hashedNewPassword);
   }
 
   async getUserById(id: string) {

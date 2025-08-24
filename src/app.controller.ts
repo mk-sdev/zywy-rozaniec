@@ -22,6 +22,7 @@ import { accessTokenOptions, refreshTokenOptions } from './utils/constants';
 import { UserRequest } from './utils/interfaces';
 import { RegisterDto } from './dtos/register.dto';
 import { Id } from './id.decorator';
+import { ChangePasswordDto } from './dtos/changePassword.dto';
 @Controller()
 @UsePipes(
   new ValidationPipe({
@@ -100,6 +101,16 @@ export class AppController {
     res.cookie('refresh_token', refreshed.refresh_token, refreshTokenOptions);
 
     return { message: 'Refresh successful' };
+  }
+
+  @Patch('change-password')
+  @UseGuards(JwtGuard)
+  @HttpCode(HttpStatus.OK)
+  async changePassword(@Id() id: string, @Body() body: ChangePasswordDto) {
+    console.log('🚀 ~ AppController ~ changePassword ~ id:', id);
+
+    await this.appService.changePassword(id, body.password, body.newPassword);
+    return { message: 'Password changed successfully' };
   }
 
   @Get('isLogged')
