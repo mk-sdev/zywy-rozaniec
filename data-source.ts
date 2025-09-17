@@ -8,10 +8,10 @@ import { Help } from './src/repository/help.entity';
 const isCompiled = __filename.includes('dist') || __dirname.includes('dist');
 
 export const AppDataSource = new DataSource({
-  type: 'mysql',
+  type: 'postgres',
   host: process.env.DB_HOST || 'localhost',
-  port: parseInt(process.env.DB_PORT || '3306') || 3306,
-  username: process.env.DB_USER || 'root',
+  port: parseInt(process.env.DB_PORT || '5432'),
+  username: process.env.DB_USER || 'postgres',
   password: process.env.DB_PASS || '',
   database: process.env.DB_NAME || 'zywy_rozaniec',
   entities: [Publication, User, RefreshToken, Help],
@@ -21,4 +21,7 @@ export const AppDataSource = new DataSource({
       : 'src/migrations/*.ts', // to migrate the db
   ],
   synchronize: false,
+  ssl: {
+    rejectUnauthorized: false, // Neon wymaga SSL, ale nie pełnej weryfikacji certyfikatu
+  },
 });
