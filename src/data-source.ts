@@ -1,9 +1,9 @@
 import 'dotenv/config';
 import { DataSource } from 'typeorm';
-import { Publication } from './src/repository/publication.entity';
-import { User } from './src/repository/user.entity';
-import { RefreshToken } from './src/repository/refreshToken.entity';
-import { Help } from './src/repository/help.entity';
+import { Publication } from './repository/publication.entity';
+import { User } from './repository/user.entity';
+import { RefreshToken } from './repository/refreshToken.entity';
+import { Help } from './repository/help.entity';
 
 const isCompiled = __filename.includes('dist') || __dirname.includes('dist');
 

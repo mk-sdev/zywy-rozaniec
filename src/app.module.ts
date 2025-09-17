@@ -10,7 +10,7 @@ import { HashService } from './hash.service';
 import { PublicationModule } from './publication/publication.module';
 import { RepositoryModule } from './repository/repository.module';
 import { TokensModule } from './utils/tokens.module';
-import { AppDataSource } from 'data-source';
+import { AppDataSource } from 'src/data-source';
 import { HelpModule } from './help/help.module';
 
 @Module({
