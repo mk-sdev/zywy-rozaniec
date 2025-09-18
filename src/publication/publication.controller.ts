@@ -93,27 +93,19 @@ export class PublicationController {
   @UseGuards(JwtGuard)
   @UseInterceptors(FileInterceptor('file'))
   async uploadFileToImgbb(@UploadedFile() file: Express.Multer.File) {
-    console.log('🚀 ~ PublicationController ~ uploadFileToImgbb ~ file:', file);
     if (!file) {
       throw new BadRequestException('Plik nie został przesłany');
     }
+
     const apiKey = process.env.IMGBB_KEY;
     if (!apiKey) {
       throw new Error('Brak klucza API IMGBB');
     }
+
     const url = await this.publicationService.uploadImageToImgbb(
       file.buffer,
       apiKey,
     );
-    console.log('🚀 ~ PublicationController ~ uploadFileToImgbb ~ url:', url);
-
     return { url };
-  }
-
-  @Get('test-fetch')
-  async testFetch() {
-    const res = await fetch('https://httpbin.org/get');
-    const data = await res.json();
-    return data;
   }
 }
