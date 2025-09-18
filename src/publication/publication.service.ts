@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PublicationRepositoryService } from '../repository/publicationRepository.service';
+
 @Injectable()
 export class PublicationService {
   constructor(
@@ -67,8 +68,16 @@ export class PublicationService {
 
   async uploadImageToImgbb(buffer: Buffer, apiKey: string): Promise<string> {
     const base64Image = buffer.toString('base64');
+    console.log(
+      '🚀 ~ PublicationService ~ uploadImageToImgbb ~ base64Image:',
+      base64Image,
+    );
 
     const params = new URLSearchParams();
+    console.log(
+      '🚀 ~ PublicationService ~ uploadImageToImgbb ~ params:',
+      params,
+    );
     params.append('image', base64Image);
 
     const response = await fetch(
@@ -81,9 +90,22 @@ export class PublicationService {
         body: params.toString(),
       },
     );
+    console.log(
+      '🚀 ~ PublicationService ~ uploadImageToImgbb ~ response:',
+      response,
+    );
 
     const data = await response.json();
+    console.log('🚀 ~ PublicationService ~ uploadImageToImgbb ~ data:', data);
 
+    console.log(
+      '🚀 ~ PublicationService ~ uploadImageToImgbb ~ response.ok :',
+      response.ok,
+    );
+    console.log(
+      '🚀 ~ PublicationService ~ uploadImageToImgbb ~ !data?.data?.url:',
+      !data?.data?.url,
+    );
     if (!response.ok || !data?.data?.url) {
       throw new Error('Nie udało się wgrać zdjęcia na imgbb');
     }

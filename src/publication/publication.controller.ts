@@ -93,6 +93,7 @@ export class PublicationController {
   @UseGuards(JwtGuard)
   @UseInterceptors(FileInterceptor('file'))
   async uploadFileToImgbb(@UploadedFile() file: Express.Multer.File) {
+    console.log('🚀 ~ PublicationController ~ uploadFileToImgbb ~ file:', file);
     if (!file) {
       throw new BadRequestException('Plik nie został przesłany');
     }
@@ -104,7 +105,15 @@ export class PublicationController {
       file.buffer,
       apiKey,
     );
+    console.log('🚀 ~ PublicationController ~ uploadFileToImgbb ~ url:', url);
 
     return { url };
+  }
+
+  @Get('test-fetch')
+  async testFetch() {
+    const res = await fetch('https://httpbin.org/get');
+    const data = await res.json();
+    return data;
   }
 }
