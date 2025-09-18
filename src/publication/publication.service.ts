@@ -68,10 +68,6 @@ export class PublicationService {
 
   async uploadImageToImgbb(buffer: Buffer, apiKey: string): Promise<string> {
     const base64Image = buffer.toString('base64');
-    console.log(
-      '🚀 ~ PublicationService ~ uploadImageToImgbb ~ base64Image:',
-      base64Image,
-    );
 
     const params = new URLSearchParams();
     console.log(
@@ -96,16 +92,10 @@ export class PublicationService {
     );
 
     const data = await response.json();
-    console.log('🚀 ~ PublicationService ~ uploadImageToImgbb ~ data:', data);
+    console.log('🧪 FULL RESPONSE DATA:', JSON.stringify(data, null, 2));
+    console.log('🧪 response.ok:', response.ok);
+    console.log('🧪 data?.data?.url:', data?.data?.url);
 
-    console.log(
-      '🚀 ~ PublicationService ~ uploadImageToImgbb ~ response.ok :',
-      response.ok,
-    );
-    console.log(
-      '🚀 ~ PublicationService ~ uploadImageToImgbb ~ !data?.data?.url:',
-      !data?.data?.url,
-    );
     if (!response.ok || !data?.data?.url) {
       throw new Error('Nie udało się wgrać zdjęcia na imgbb');
     }
